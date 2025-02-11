@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      uri: http://localhost:8651
+      name: local
+  profiles:
+    active: course
