@@ -1,7 +1,7 @@
 spring:
   cloud:
     config:
-      uri: http://localhost:8651
-      name: local
+      uri: http://scheduler-config-service:8651
+      name: application
   profiles:
     active: course
