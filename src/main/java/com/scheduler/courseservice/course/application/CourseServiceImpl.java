@@ -46,7 +46,7 @@ public class CourseServiceImpl implements CourseService {
         String password = findStudentCourseInfo.getPassword();
 
         StudentInfo studentInfo = memberServiceClient
-                .findCourseByStudentName(studentName, password);
+                .findCourseByStudentNameAndPassword(studentName, password);
 
         String teacherId = studentInfo.getTeacherId();
 
@@ -76,7 +76,7 @@ public class CourseServiceImpl implements CourseService {
         String password = findStudentCourseInfo.getPassword();
 
         StudentInfo feignMemberInfo = memberServiceClient
-                .findCourseByStudentName(studentName, password);
+                .findCourseByStudentNameAndPassword(studentName, password);
 
         String studentId = feignMemberInfo.getStudentId();
         return courseRepository.getStudentClassByStudentId(studentId);
@@ -92,7 +92,7 @@ public class CourseServiceImpl implements CourseService {
 
         String password = registerCourseRequest.getPassword();
 
-        StudentInfo studentInfo = memberServiceClient.findStudentByStudentNameAndPassword(studentName, password);
+        StudentInfo studentInfo = memberServiceClient.findCourseByStudentNameAndPassword(studentName, password);
 
         TeacherInfo teacherInfo = memberServiceClient.findTeacherByStudentId(studentInfo.getStudentId());
 

@@ -13,14 +13,11 @@ import static com.scheduler.courseservice.client.dto.FeignMemberInfo.*;
 public interface MemberServiceClient {
 
     @PostMapping("{studentName}/{password}")
-    StudentInfo findCourseByStudentName(String studentName, String password);
+    StudentInfo findCourseByStudentNameAndPassword(@PathVariable String studentName, @PathVariable String password);
 
     @GetMapping("{studentId}")
     TeacherInfo findTeacherByStudentId(@PathVariable String studentId);
 
     @GetMapping("memberInfo")
     MemberInfo findMemberInfoByToken(@RequestHeader("Authorization") String token);
-
-    @PostMapping("{studentName}/{password}")
-    StudentInfo findStudentByStudentNameAndPassword(String studentName, String password);
 }
