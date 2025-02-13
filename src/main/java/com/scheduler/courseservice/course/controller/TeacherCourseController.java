@@ -25,6 +25,6 @@ public class TeacherCourseController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return new ResponseEntity<>(courseService.findStudentClassList(token, of(page - 1, size)), OK);
+        return new ResponseEntity<>(courseService.findAllStudentsCourses(token, of(page - 1, size)), OK);
     }
 }

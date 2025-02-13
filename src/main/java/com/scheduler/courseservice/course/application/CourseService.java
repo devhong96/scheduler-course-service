@@ -10,7 +10,7 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 
 public interface CourseService {
 
-      Page<StudentCourseResponse> findStudentClassList(String token, Pageable pageable);
+      Page<StudentCourseResponse> findAllStudentsCourses(String token, Pageable pageable);
 
       CourseList findTeachersClasses(FindStudentCourseInfo findStudentCourseInfo);
 

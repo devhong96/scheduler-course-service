@@ -1,6 +1,5 @@
 package com.scheduler.courseservice.course.domain;
 
-import com.scheduler.courseservice.course.BaseEntity;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

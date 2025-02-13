@@ -18,7 +18,7 @@ public class CourseController {
 
     private final CourseService courseService;
 
-    @Operation(description = "학생 본인 수업 조회")
+    @Operation(description = "학생 본인 금주 수업 조회")
     @GetMapping("findClass")
     public ResponseEntity<StudentCourseResponse> findClass(
             @RequestBody FindStudentCourseInfo findStudentCourseInfo

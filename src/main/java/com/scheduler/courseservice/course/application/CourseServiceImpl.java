@@ -29,13 +29,13 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
-    public Page<StudentCourseResponse> findStudentClassList(
+    public Page<StudentCourseResponse> findAllStudentsCourses(
             String token, Pageable pageable
     ) {
         MemberInfo memberInfo = memberServiceClient.findMemberInfoByToken(token);
         String memberId = memberInfo.getMemberId();
 
-        return courseRepository.getStudentCourseList(memberId, pageable);
+        return courseRepository.findAllStudentsCourses(memberId, pageable);
     }
 
     @Override
@@ -79,12 +79,14 @@ public class CourseServiceImpl implements CourseService {
                 .findCourseByStudentNameAndPassword(studentName, password);
 
         String studentId = feignMemberInfo.getStudentId();
-        return courseRepository.getStudentClassByStudentId(studentId);
+        return courseRepository.getWeeklyClassByStudentId(studentId);
     }
 
     @Override
     @Transactional
-    public void saveClassTable(RegisterCourseRequest registerCourseRequest) {
+    public void saveClassTable(
+            RegisterCourseRequest registerCourseRequest
+    ) {
 
         duplicateClassValidator(registerCourseRequest);
 
@@ -104,10 +106,10 @@ public class CourseServiceImpl implements CourseService {
 
     private void duplicateClassValidator(RegisterCourseRequest registerCourseRequest) {
 
-        List<StudentCourseResponse> allClassDTO = courseRepository.getStudentClass();
+        List<StudentCourseResponse> StudentCourseList = courseRepository.getWeeklyCoursesForAllStudents();
 
-        for (StudentCourseResponse classDTO : allClassDTO) {
-            if (isOverlapping(classDTO, registerCourseRequest)) {
+        for (StudentCourseResponse StudentCourseResponse : StudentCourseList) {
+            if (isOverlapping(StudentCourseResponse, registerCourseRequest)) {
                 throw new IllegalStateException("수업이 중복됩니다.");
             }
         }

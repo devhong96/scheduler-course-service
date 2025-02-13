@@ -27,6 +27,6 @@ public class AdminCourseController {
             @RequestParam(defaultValue = "10") int size
     ) {
         PageRequest pageRequest = of(page - 1, size);
-        return new ResponseEntity<>(courseService.findStudentClassList(token, pageRequest), OK);
+        return new ResponseEntity<>(courseService.findAllStudentsCourses(token, pageRequest), OK);
     }
 }

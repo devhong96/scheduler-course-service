@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.course;
+package com.scheduler.courseservice.course.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
