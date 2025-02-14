@@ -29,21 +29,13 @@ public class SecurityConfig {
     }
 
     public static final String[] INTERNAL_ENDPOINTS = {
-            "/feign-member-ebook/**",
-            "/feign-order-ebook/**",
+            "/feign-member/**",
             "/actuator/**",
-
-            "/swagger-resources/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
+            "/course-api/**"
 
     };
     
     public static final String[] ADMIN_RESTRICTED_ENDPOINTS = {
-
-    };
-
-    public static final String[] RESTRICTED_ENDPOINTS = {
 
     };
 
@@ -52,6 +44,9 @@ public class SecurityConfig {
     };
 
     public static final String[] ENDPOINTS_WHITELISTS = {
+            "/swagger-resources/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
 
     };
 
@@ -71,8 +66,7 @@ public class SecurityConfig {
                                 "hasIpAddress('127.0.0.1') or hasIpAddress('172.18.0.0/16')")
                 )
                 .requestMatchers(ADMIN_RESTRICTED_ENDPOINTS).hasAuthority("ADMIN")
-                .requestMatchers(RESTRICTED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER")
-                .requestMatchers(AUTHORIZED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER", "READER")
+                .requestMatchers(AUTHORIZED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER")
                 .requestMatchers(ENDPOINTS_WHITELISTS).permitAll()
                 .anyRequest().authenticated()
                 )
