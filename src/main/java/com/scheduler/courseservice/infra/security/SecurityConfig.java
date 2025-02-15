@@ -31,8 +31,6 @@ public class SecurityConfig {
     public static final String[] INTERNAL_ENDPOINTS = {
             "/feign-member/**",
             "/actuator/**",
-            "/course-api/**"
-
     };
     
     public static final String[] ADMIN_RESTRICTED_ENDPOINTS = {
@@ -44,9 +42,7 @@ public class SecurityConfig {
     };
 
     public static final String[] ENDPOINTS_WHITELISTS = {
-            "/swagger-resources/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
+            "/course-api/**"
 
     };
 
