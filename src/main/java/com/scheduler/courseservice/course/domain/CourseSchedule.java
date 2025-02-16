@@ -1,6 +1,5 @@
 package com.scheduler.courseservice.course.domain;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -9,8 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-import java.time.LocalDate;
-
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -30,17 +28,17 @@ public class CourseSchedule extends BaseEntity {
 
     private String teacherId;
 
-    private Integer mondayClass;
+    private Integer mondayClassHour;
 
-    private Integer tuesdayClass;
+    private Integer tuesdayClassHour;
 
-    private Integer wednesdayClass;
+    private Integer wednesdayClassHour;
 
-    private Integer thursdayClass;
+    private Integer thursdayClassHour;
 
-    private Integer fridayClass;
+    private Integer fridayClassHour;
 
-    private Integer weekNumber;
+    private Integer weekOfYear;
 
     private Integer year;
 
@@ -50,17 +48,20 @@ public class CourseSchedule extends BaseEntity {
     public static CourseSchedule create(RegisterCourseRequest request, TeacherInfo teacherInfo) {
         CourseSchedule courseSchedule = new CourseSchedule();
         courseSchedule.teacherId = teacherInfo.getTeacherId();
-        courseSchedule.mondayClass = request.getMondayClass();
-        courseSchedule.tuesdayClass = request.getTuesdayClass();
-        courseSchedule.wednesdayClass = request.getWednesdayClass();
-        courseSchedule.thursdayClass = request.getThursdayClass();
-        courseSchedule.fridayClass = request.getFridayClass();
+        courseSchedule.mondayClassHour = request.getMondayClass();
+        courseSchedule.tuesdayClassHour = request.getTuesdayClass();
+        courseSchedule.wednesdayClassHour = request.getWednesdayClass();
+        courseSchedule.thursdayClassHour = request.getThursdayClass();
+        courseSchedule.fridayClassHour = request.getFridayClass();
         return courseSchedule;
     }
 
-    @PostConstruct
-    public void init() {
-        this.year = LocalDate.now().getYear();
+    public static CourseSchedule createBaseSchedule(StudentInfo studentInfo, int currentWeek, int currentYear) {
+        CourseSchedule courseSchedule = new CourseSchedule();
+        courseSchedule.year = currentYear;
+        courseSchedule.weekOfYear = currentWeek;
+        courseSchedule.studentId = studentInfo.getStudentId();
+        courseSchedule.teacherId = studentInfo.getTeacherId();
+        return courseSchedule;
     }
-
 }

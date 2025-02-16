@@ -33,11 +33,11 @@ public class CourseRepository {
     ) {
         List<StudentCourseResponse> contents = queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.mondayClass,
-                        courseSchedule.tuesdayClass,
-                        courseSchedule.wednesdayClass,
-                        courseSchedule.thursdayClass,
-                        courseSchedule.fridayClass))
+                        courseSchedule.mondayClassHour,
+                        courseSchedule.tuesdayClassHour,
+                        courseSchedule.wednesdayClassHour,
+                        courseSchedule.thursdayClassHour,
+                        courseSchedule.fridayClassHour))
                 .from(courseSchedule)
                 .where(
                         teacherIdEq(memberId),
@@ -65,11 +65,11 @@ public class CourseRepository {
 
         return queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.mondayClass,
-                        courseSchedule.tuesdayClass,
-                        courseSchedule.wednesdayClass,
-                        courseSchedule.thursdayClass,
-                        courseSchedule.fridayClass))
+                        courseSchedule.mondayClassHour,
+                        courseSchedule.tuesdayClassHour,
+                        courseSchedule.wednesdayClassHour,
+                        courseSchedule.thursdayClassHour,
+                        courseSchedule.fridayClassHour))
                 .from(courseSchedule)
                 .where(
                         yearEq(currentYear),
@@ -85,11 +85,11 @@ public class CourseRepository {
         return queryFactory
                 .select(
                         Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.mondayClass,
-                        courseSchedule.tuesdayClass,
-                        courseSchedule.wednesdayClass,
-                        courseSchedule.thursdayClass,
-                        courseSchedule.fridayClass
+                        courseSchedule.mondayClassHour,
+                        courseSchedule.tuesdayClassHour,
+                        courseSchedule.wednesdayClassHour,
+                        courseSchedule.thursdayClassHour,
+                        courseSchedule.fridayClassHour
                 ))
                 .from(courseSchedule)
                 .where(
@@ -105,17 +105,17 @@ public class CourseRepository {
     }
 
     private BooleanBuilder weekNumberEq(int weekNumber) {
-        return nullSafeBooleanBuilder(() -> courseSchedule.weekNumber.eq(weekNumber));
+        return nullSafeBooleanBuilder(() -> courseSchedule.weekOfYear.eq(weekNumber));
     }
 
     public List<StudentCourseResponse> getStudentClassByTeacherId(String teacherId){
         return queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.mondayClass,
-                        courseSchedule.tuesdayClass,
-                        courseSchedule.wednesdayClass,
-                        courseSchedule.thursdayClass,
-                        courseSchedule.fridayClass))
+                        courseSchedule.mondayClassHour,
+                        courseSchedule.tuesdayClassHour,
+                        courseSchedule.wednesdayClassHour,
+                        courseSchedule.thursdayClassHour,
+                        courseSchedule.fridayClassHour))
                 .from(courseSchedule)
                 .where(teacherIdEq(teacherId))
                 .fetch();

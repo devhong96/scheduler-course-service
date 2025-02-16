@@ -11,6 +11,7 @@ import java.time.temporal.WeekFields;
 @Getter
 @Component
 public class DateProvider {
+
     private int currentYear;
     private int currentWeek;
 
