@@ -11,7 +11,9 @@ public class FeignMemberInfo {
     public static class StudentInfo {
 
         private String studentId;
+        private String studentName;
         private String teacherId;
+        private String teacherName;
     }
 
     @Getter

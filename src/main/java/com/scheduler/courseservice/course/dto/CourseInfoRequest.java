@@ -1,22 +1,11 @@
 package com.scheduler.courseservice.course.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 public class CourseInfoRequest {
-
-    @Getter
-    @Setter
-    public static class FindStudentCourseInfo {
-
-        @NotEmpty
-        private String studentName;
-
-        private String password;
-    }
 
     @Getter
     @Setter

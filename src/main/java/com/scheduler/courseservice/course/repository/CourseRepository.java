@@ -58,6 +58,27 @@ public class CourseRepository {
         return PageableExecutionUtils.getPage(contents, pageable, counts::fetchOne);
     }
 
+    public List<StudentCourseResponse> getWeeklyCoursesForTeacher(String teacherId){
+
+        int currentYear = dateProvider.getCurrentYear();
+        int currentWeek = dateProvider.getCurrentWeek();
+
+        return queryFactory
+                .select(Projections.fields(StudentCourseResponse.class,
+                        courseSchedule.mondayClassHour,
+                        courseSchedule.tuesdayClassHour,
+                        courseSchedule.wednesdayClassHour,
+                        courseSchedule.thursdayClassHour,
+                        courseSchedule.fridayClassHour))
+                .from(courseSchedule)
+                .where(
+                        yearEq(currentYear),
+                        weekNumberEq(currentWeek),
+                        teacherIdEq(teacherId)
+                )
+                .fetch();
+    }
+
     public List<StudentCourseResponse> getWeeklyCoursesForAllStudents(){
 
         int currentYear = dateProvider.getCurrentYear();
@@ -77,7 +98,7 @@ public class CourseRepository {
                 .fetch();
     }
 
-    public StudentCourseResponse getWeeklyClassByStudentId(String studentId){
+    public StudentCourseResponse getWeeklyCoursesByStudentId(String studentId){
 
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();
