@@ -11,9 +11,9 @@ public interface CourseService {
 
       Page<StudentCourseResponse> findAllStudentsCourses(String token, Pageable pageable);
 
-      CourseList findTeachersClasses(String token);
+      CourseList findTeachersClasses(String token, String username);
 
-      StudentCourseResponse findStudentClasses(String token);
+      StudentCourseResponse findStudentClasses(String token, String username);
 
       void saveClassTable(String token, RegisterCourseRequest registerCourseRequest);
 

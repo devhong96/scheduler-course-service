@@ -47,28 +47,28 @@ jobs:
     - name: Publish to docker hub
       run: docker push devhong96/scheduler-course-service:latest
 
-  deploy:
-
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Set up SSH connection to synology
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: deploy
-        run: |
-          ssh -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.NAS_USERNAME }}@${{ secrets.NAS_HOST }}  << EOF
-          cd /volume1/docker/scheduler/application
-
-          compose stop course-service
-          compose rm -f course-service
-          docker rmi -f course-service
-
-          compose pull course-service
-          compose up -d --no-deps course-service
-          EOF    
+#  deploy:
+#
+#    runs-on: ubuntu-latest
+#    needs: build
+#    steps:
+#      - name: Set up SSH connection to synology
+#        uses: webfactory/ssh-agent@v0.9.0
+#        with:
+#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+#
+#      - name: deploy
+#        run: |
+#          ssh -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.NAS_USERNAME }}@${{ secrets.NAS_HOST }}  << EOF
+#          cd /volume1/docker/scheduler/application
+#
+#          compose stop course-service
+#          compose rm -f course-service
+#          docker rmi -f course-service
+#
+#          compose pull course-service
+#          compose up -d --no-deps course-service
+#          EOF
 
   dependency-submission:
 

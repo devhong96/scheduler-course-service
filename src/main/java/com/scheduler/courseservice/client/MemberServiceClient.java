@@ -16,9 +16,10 @@ import static com.scheduler.courseservice.client.dto.FeignMemberInfo.*;
 )
 public interface MemberServiceClient {
 
-    @PostMapping("{studentName}/{password}")
-    StudentInfo findCourseByStudentNameAndCode(
-            @RequestHeader("Authorization") String token
+    @PostMapping("student/{username}")
+    StudentInfo findCourseByStudentUsername(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("username") String username
     );
 
     @GetMapping("{studentId}")

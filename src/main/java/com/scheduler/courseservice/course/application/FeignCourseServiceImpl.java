@@ -5,6 +5,7 @@ import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class FeignCourseServiceImpl implements FeignCourseService {
     private final CourseJpaRepository courseJpaRepository;
 
     @Override
+    @Transactional
     public Boolean validateStudentCoursesAndReassign(String teacherId, String studentId) {
 
         List<StudentCourseResponse> teacherCourses = courseRepository.getWeeklyCoursesForTeacher(teacherId);

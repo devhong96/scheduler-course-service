@@ -1,6 +1,5 @@
 package com.scheduler.courseservice.course.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,12 +35,7 @@ public class CourseInfoRequest {
     public static class RegisterCourseRequest {
 
         // 학생 이름
-        private String studentName;
-
-        private String password;
-
-        @JsonIgnore
-        private String teacherId;
+        private String studentUsername;
 
         // 수업 시간
         @NotNull(message = "요일을 선택해 주세요")

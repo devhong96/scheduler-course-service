@@ -21,9 +21,10 @@ public class CourseController {
     @Operation(description = "학생 본인 금주 수업 조회")
     @GetMapping("findClass")
     public ResponseEntity<StudentCourseResponse> findClass(
-            @RequestHeader("Authorization") String token
+            @RequestHeader("Authorization") String token,
+            @RequestParam String username
     ) {
-        return new ResponseEntity<>(courseService.findStudentClasses(token), OK);
+        return new ResponseEntity<>(courseService.findStudentClasses(token, username), OK);
     }
 
     @Operation(description = "수업 제출")

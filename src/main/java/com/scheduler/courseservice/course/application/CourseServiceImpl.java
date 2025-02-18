@@ -56,10 +56,10 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     @CircuitBreaker(name = MEMBER_SERVICE, fallbackMethod = "fallback")
-    public CourseList findTeachersClasses(String token) {
+    public CourseList findTeachersClasses(String token, String username) {
 
         StudentInfo studentInfo = memberServiceClient
-                .findCourseByStudentNameAndCode(token);
+                .findCourseByStudentUsername(token, username);
 
         String teacherId = studentInfo.getTeacherId();
 
@@ -92,10 +92,10 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public StudentCourseResponse findStudentClasses(
-            String token
+            String token, String username
     ) {
         StudentInfo feignMemberInfo = memberServiceClient
-                .findCourseByStudentNameAndCode(token);
+                .findCourseByStudentUsername(token, username);
 
         String studentId = feignMemberInfo.getStudentId();
         return courseRepository.getWeeklyCoursesByStudentId(studentId);
@@ -108,7 +108,7 @@ public class CourseServiceImpl implements CourseService {
     ) {
         duplicateClassValidator(registerCourseRequest);
 
-        StudentInfo studentInfo = memberServiceClient.findCourseByStudentNameAndCode(token);
+        StudentInfo studentInfo = memberServiceClient.findCourseByStudentUsername(token, registerCourseRequest.getStudentUsername());
 
         TeacherInfo teacherInfo = memberServiceClient.findTeacherByStudentId(token, studentInfo.getStudentId());
 
