@@ -30,7 +30,6 @@ public class SecurityConfig {
 
     public static final String[] INTERNAL_ENDPOINTS = {
             "/feign-member/**",
-            "/actuator/**",
     };
     
     public static final String[] ADMIN_RESTRICTED_ENDPOINTS = {
@@ -42,7 +41,8 @@ public class SecurityConfig {
     };
 
     public static final String[] ENDPOINTS_WHITELISTS = {
-            "/course-api/**"
+            "/course-api/**",
+            "/actuator/**",
 
     };
 
@@ -55,20 +55,19 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .addFilterAt(new JwtAuthFilter(jwtUtils), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(
-        auth -> auth
-                .requestMatchers(INTERNAL_ENDPOINTS)
-                .access(
-                        new WebExpressionAuthorizationManager(
-                                "hasIpAddress('127.0.0.1') or hasIpAddress('172.18.0.0/16')")
-                )
-                .requestMatchers(ADMIN_RESTRICTED_ENDPOINTS).hasAuthority("ADMIN")
-                .requestMatchers(AUTHORIZED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER")
-                .requestMatchers(ENDPOINTS_WHITELISTS).permitAll()
-                .anyRequest().authenticated()
+                        auth -> auth
+                                .requestMatchers(INTERNAL_ENDPOINTS)
+                                .access(
+                                        new WebExpressionAuthorizationManager(
+                                                "hasIpAddress('127.0.0.1') or hasIpAddress('172.18.0.0/16')")
+                                )
+                                .requestMatchers(ADMIN_RESTRICTED_ENDPOINTS).hasAuthority("ADMIN")
+                                .requestMatchers(AUTHORIZED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER")
+                                .requestMatchers(ENDPOINTS_WHITELISTS).permitAll()
+                                .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(STATELESS));
-
         return httpSecurity.build();
     }
 }
