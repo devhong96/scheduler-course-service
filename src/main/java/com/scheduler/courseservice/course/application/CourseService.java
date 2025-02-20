@@ -9,11 +9,11 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 
 public interface CourseService {
 
-      Page<StudentCourseResponse> findAllStudentsCourses(String token, Pageable pageable);
+      Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable);
 
-      CourseList findTeachersClasses(String token, String username);
+      CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear);
 
-      StudentCourseResponse findStudentClasses(String token, String username);
+      StudentCourseResponse findStudentClasses(String token);
 
       void saveClassTable(String token, RegisterCourseRequest registerCourseRequest);
 

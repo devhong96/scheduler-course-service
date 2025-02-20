@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
 import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -45,9 +44,9 @@ public class CourseSchedule extends BaseEntity {
     @Version
     private Long version;
 
-    public static CourseSchedule create(RegisterCourseRequest request, TeacherInfo teacherInfo) {
+    public static CourseSchedule create(RegisterCourseRequest request, String teacherId) {
         CourseSchedule courseSchedule = new CourseSchedule();
-        courseSchedule.teacherId = teacherInfo.getTeacherId();
+        courseSchedule.teacherId = teacherId;
         courseSchedule.mondayClassHour = request.getMondayClass();
         courseSchedule.tuesdayClassHour = request.getTuesdayClass();
         courseSchedule.wednesdayClassHour = request.getWednesdayClass();

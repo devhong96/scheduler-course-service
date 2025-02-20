@@ -1,6 +1,7 @@
 package com.scheduler.courseservice.course.application;
 
 import com.scheduler.courseservice.client.MemberServiceClient;
+import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
@@ -16,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
-import static com.scheduler.courseservice.client.dto.FeignMemberInfo.*;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
@@ -29,6 +31,7 @@ public class CourseServiceImpl implements CourseService {
     private static final String MEMBER_SERVICE = "memberService";
 
     private final Resilience4JCircuitBreakerFactory circuitBreakerFactory;
+    private final DateProvider dateProvider;
 
     private final MemberServiceClient memberServiceClient;
     private final CourseRepository courseRepository;
@@ -38,16 +41,12 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @CircuitBreaker(name = MEMBER_SERVICE, fallbackMethod = "fallback")
     public Page<StudentCourseResponse> findAllStudentsCourses(
-            String token, Pageable pageable
+            Pageable pageable
     ) {
-
-        MemberInfo memberInfo = memberServiceClient.findMemberInfoByToken(token);
-        String memberId = memberInfo.getMemberId();
-
-        return courseRepository.findAllStudentsCourses(memberId, pageable);
+        return courseRepository.findAllStudentsCourses(pageable);
     }
 
-    private Page<StudentCourseResponse> fallback(String token, Pageable pageable, Throwable t) {
+    private Page<StudentCourseResponse> fallback(Pageable pageable, Throwable t) {
         log.warn("Fallback triggered due to: {}", t.getMessage());
 
         return Page.empty(pageable);
@@ -55,20 +54,19 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
-    @CircuitBreaker(name = MEMBER_SERVICE, fallbackMethod = "fallback")
-    public CourseList findTeachersClasses(String token, String username) {
+    public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
 
-        StudentInfo studentInfo = memberServiceClient
-                .findCourseByStudentUsername(token, username);
+        TeacherInfo teacherInfo = memberServiceClient
+                .findTeachersClasses(token);
 
-        String teacherId = studentInfo.getTeacherId();
+        String teacherId = teacherInfo.getTeacherId();
+        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
 
-        List<StudentCourseResponse> studentClassByTeacherName
-                = courseRepository.getStudentClassByTeacherId(teacherId);
+        List<StudentCourseResponse> studentClassByTeacherName = courseRepository
+                .getStudentClassByTeacherId(teacherId, finalYear, finalWeekOfYear);
 
         CourseList classList = CourseList.getInstance();
-
-        classList.setStudentName(studentInfo.getStudentName());
 
         for (StudentCourseResponse studentCourseResponse : studentClassByTeacherName) {
             classList.getMondayClassList().add(studentCourseResponse.getMondayClass());
@@ -81,23 +79,14 @@ public class CourseServiceImpl implements CourseService {
         return classList;
     }
 
-    private CourseList fallback(String token, Throwable t) {
-        log.warn("Fallback triggered due to: {}", t.getMessage());
-
-        CourseList fallbackClassList = CourseList.getInstance();
-        fallbackClassList.setStudentName("Unknown Student");
-
-        return fallbackClassList;
-    }
-
     @Override
     public StudentCourseResponse findStudentClasses(
-            String token, String username
+            String token
     ) {
-        StudentInfo feignMemberInfo = memberServiceClient
-                .findCourseByStudentUsername(token, username);
+        StudentInfo studentInfo = memberServiceClient
+                .findStudentInfoByToken(token);
 
-        String studentId = feignMemberInfo.getStudentId();
+        String studentId = studentInfo.getStudentId();
         return courseRepository.getWeeklyCoursesByStudentId(studentId);
     }
 
@@ -108,11 +97,11 @@ public class CourseServiceImpl implements CourseService {
     ) {
         duplicateClassValidator(registerCourseRequest);
 
-        StudentInfo studentInfo = memberServiceClient.findCourseByStudentUsername(token, registerCourseRequest.getStudentUsername());
+        StudentInfo studentInfo = memberServiceClient
+                .findStudentInfoByToken(token);
 
-        TeacherInfo teacherInfo = memberServiceClient.findTeacherByStudentId(token, studentInfo.getStudentId());
-
-        CourseSchedule courseSchedule = CourseSchedule.create(registerCourseRequest, teacherInfo);
+        CourseSchedule courseSchedule = CourseSchedule
+                .create(registerCourseRequest, studentInfo.getTeacherId());
 
         courseJpaRepository.save(courseSchedule);
     }

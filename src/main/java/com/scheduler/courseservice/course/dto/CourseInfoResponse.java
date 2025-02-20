@@ -12,8 +12,6 @@ public class CourseInfoResponse {
     @Setter
     public static class StudentCourseResponse {
 
-        private String studentId;
-
         private Integer mondayClass;
 
         private Integer tuesdayClass;
@@ -28,8 +26,6 @@ public class CourseInfoResponse {
     @Getter
     @Setter
     public static class CourseList {
-
-        private String studentName;
 
         private List<Integer> mondayClassList = new ArrayList<>();
         private List<Integer> tuesdayClassList = new ArrayList<>();

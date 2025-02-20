@@ -1,6 +1,6 @@
-package com.scheduler.courseservice.course.feign;
+package com.scheduler.courseservice.client.controller;
 
-import com.scheduler.courseservice.course.application.FeignCourseService;
+import com.scheduler.courseservice.client.service.FeignCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 @RequestMapping("feign-course")
 @RequiredArgsConstructor
-public class FeignController {
+public class FeignMemberController {
 
     private final FeignCourseService feignCourseService;
 

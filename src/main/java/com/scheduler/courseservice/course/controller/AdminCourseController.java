@@ -6,7 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.springframework.data.domain.PageRequest.of;
@@ -22,11 +25,10 @@ public class AdminCourseController {
     @Operation(description = "관리자 버전 조회")
     @GetMapping("class")
     public ResponseEntity<Page<StudentCourseResponse>> managePage(
-            @RequestHeader("Authorization") String token,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         PageRequest pageRequest = of(page - 1, size);
-        return new ResponseEntity<>(courseService.findAllStudentsCourses(token, pageRequest), OK);
+        return new ResponseEntity<>(courseService.findAllStudentsCourses(pageRequest), OK);
     }
 }

@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.course.application;
+package com.scheduler.courseservice.client.service;
 
 
 import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseExistenceResponse;

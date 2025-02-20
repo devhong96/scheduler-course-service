@@ -29,7 +29,7 @@ public class CourseRepository {
 
     @Lock(LockModeType.OPTIMISTIC)
     public Page<StudentCourseResponse> findAllStudentsCourses(
-            String memberId, Pageable pageable
+            Pageable pageable
     ) {
         List<StudentCourseResponse> contents = queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
@@ -39,21 +39,13 @@ public class CourseRepository {
                         courseSchedule.thursdayClassHour,
                         courseSchedule.fridayClassHour))
                 .from(courseSchedule)
-                .where(
-                        teacherIdEq(memberId),
-                        studentIdEq(memberId)
-                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         JPAQuery<Long> counts = queryFactory
                 .select(courseSchedule.count())
-                .from(courseSchedule)
-                .where(
-                        teacherIdEq(memberId),
-                        studentIdEq(memberId)
-                );
+                .from(courseSchedule);
 
         return PageableExecutionUtils.getPage(contents, pageable, counts::fetchOne);
     }
@@ -73,7 +65,7 @@ public class CourseRepository {
                 .from(courseSchedule)
                 .where(
                         yearEq(currentYear),
-                        weekNumberEq(currentWeek),
+                        weekOfYearEq(currentWeek),
                         teacherIdEq(teacherId)
                 )
                 .fetch();
@@ -94,7 +86,7 @@ public class CourseRepository {
                 .from(courseSchedule)
                 .where(
                         yearEq(currentYear),
-                        weekNumberEq(currentWeek))
+                        weekOfYearEq(currentWeek))
                 .fetch();
     }
 
@@ -106,41 +98,48 @@ public class CourseRepository {
         return queryFactory
                 .select(
                         Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.mondayClassHour,
-                        courseSchedule.tuesdayClassHour,
-                        courseSchedule.wednesdayClassHour,
-                        courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour
-                ))
+                                courseSchedule.mondayClassHour,
+                                courseSchedule.tuesdayClassHour,
+                                courseSchedule.wednesdayClassHour,
+                                courseSchedule.thursdayClassHour,
+                                courseSchedule.fridayClassHour
+                        ))
                 .from(courseSchedule)
                 .where(
                         studentIdEq(studentId),
                         yearEq(currentYear),
-                        weekNumberEq(currentWeek)
+                        weekOfYearEq(currentWeek)
                 )
                 .fetchOne();
     }
 
-    private BooleanBuilder yearEq(int year) {
-        return nullSafeBooleanBuilder(() -> courseSchedule.year.eq(year));
-    }
-
-    private BooleanBuilder weekNumberEq(int weekNumber) {
-        return nullSafeBooleanBuilder(() -> courseSchedule.weekOfYear.eq(weekNumber));
-    }
-
-    public List<StudentCourseResponse> getStudentClassByTeacherId(String teacherId){
+    public List<StudentCourseResponse> getStudentClassByTeacherId(
+            String teacherId, int year, int weekOfYear
+    ){
         return queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,
                         courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour))
+                        courseSchedule.fridayClassHour,
+                        courseSchedule.year,
+                        courseSchedule.weekOfYear))
                 .from(courseSchedule)
-                .where(teacherIdEq(teacherId))
+                .where(teacherIdEq(teacherId),
+                        yearEq(year),
+                        weekOfYearEq(weekOfYear))
                 .fetch();
     }
+
+    private BooleanBuilder yearEq(int year) {
+        return nullSafeBooleanBuilder(() -> courseSchedule.year.eq(year));
+    }
+
+    private BooleanBuilder weekOfYearEq(int weekNumber) {
+        return nullSafeBooleanBuilder(() -> courseSchedule.weekOfYear.eq(weekNumber));
+    }
+
 
     private BooleanBuilder teacherIdEq(String teacherId) {
         return nullSafeBooleanBuilder(() -> courseSchedule.teacherId.eq(teacherId));

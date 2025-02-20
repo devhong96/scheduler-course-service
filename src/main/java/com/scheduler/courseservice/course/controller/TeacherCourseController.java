@@ -1,14 +1,13 @@
 package com.scheduler.courseservice.course.controller;
 
 import com.scheduler.courseservice.course.application.CourseService;
+import com.scheduler.courseservice.course.component.DateProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
-import static org.springframework.data.domain.PageRequest.of;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -17,14 +16,15 @@ import static org.springframework.http.HttpStatus.OK;
 public class TeacherCourseController {
 
     private final CourseService courseService;
+    private final DateProvider dateProvider;
 
     @Operation(description = "선생님 버전 조회")
     @GetMapping("class")
-    public ResponseEntity<Page<StudentCourseResponse>> managePage (
+    public ResponseEntity<CourseList> managePage (
             @RequestHeader("Authorization") String token,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer weekOfYear
     ) {
-        return new ResponseEntity<>(courseService.findAllStudentsCourses(token, of(page - 1, size)), OK);
+        return new ResponseEntity<>(courseService.findTeachersClasses(token, year, weekOfYear), OK);
     }
 }
