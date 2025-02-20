@@ -51,21 +51,20 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:4.2.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:4.2.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-config:4.2.0'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.2.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp:4.2.0'
 
-    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     implementation 'org.springframework.boot:spring-boot-starter-hateoas:3.3.5'
-
 
     // SWAGGER
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
-
 
     // JWT
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.12.5'
@@ -86,6 +85,7 @@ dependencies {
 
     // TEST
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -93,6 +93,7 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.wiremock:wiremock-standalone:3.12.0'
     testImplementation 'io.projectreactor:reactor-test'
     testAnnotationProcessor'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'

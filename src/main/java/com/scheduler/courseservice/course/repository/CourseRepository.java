@@ -58,7 +58,7 @@ public class CourseRepository {
         return PageableExecutionUtils.getPage(contents, pageable, counts::fetchOne);
     }
 
-    public List<StudentCourseResponse> getWeeklyCoursesForTeacher(String teacherId){
+    public List<StudentCourseResponse> getTeacherWeeklyCoursesForComparison(String teacherId){
 
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();
@@ -79,7 +79,7 @@ public class CourseRepository {
                 .fetch();
     }
 
-    public List<StudentCourseResponse> getWeeklyCoursesForAllStudents(){
+    public List<StudentCourseResponse> getAllStudentsWeeklyCoursesForComparison(){
 
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();

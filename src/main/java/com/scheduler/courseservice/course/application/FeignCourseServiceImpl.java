@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseExistenceResponse;
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseReassignmentResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +23,9 @@ public class FeignCourseServiceImpl implements FeignCourseService {
 
     @Override
     @Transactional
-    public Boolean validateStudentCoursesAndReassign(String teacherId, String studentId) {
+    public CourseReassignmentResponse validateStudentCoursesAndReassign(String teacherId, String studentId) {
 
-        List<StudentCourseResponse> teacherCourses = courseRepository.getWeeklyCoursesForTeacher(teacherId);
+        List<StudentCourseResponse> teacherCourses = courseRepository.getTeacherWeeklyCoursesForComparison(teacherId);
         StudentCourseResponse studentCourses = courseRepository.getWeeklyCoursesByStudentId(studentId);
 
         if (teacherCourses == null || studentCourses == null) {
@@ -32,7 +34,7 @@ public class FeignCourseServiceImpl implements FeignCourseService {
 
         classValidator(teacherCourses, studentCourses);
 
-        return true;
+        return new CourseReassignmentResponse(true);
     }
 
     private void classValidator(
@@ -59,11 +61,13 @@ public class FeignCourseServiceImpl implements FeignCourseService {
     }
 
     @Override
-    public Boolean existWeeklyCoursesByTeacherId(String teacherId) {
-        return courseJpaRepository.existsByTeacherIdAndWeekOfYearAndYear(
+    public CourseExistenceResponse existWeeklyCoursesByTeacherId(String teacherId) {
+        Boolean exists = courseJpaRepository.existsByTeacherIdAndWeekOfYearAndYear(
                 teacherId,
                 dateProvider.getCurrentWeek(),
                 dateProvider.getCurrentYear()
         );
+
+        return new CourseExistenceResponse(exists);
     }
 }

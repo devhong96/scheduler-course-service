@@ -1,9 +1,12 @@
 package com.scheduler.courseservice.course.application;
 
 
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseExistenceResponse;
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseReassignmentResponse;
+
 public interface FeignCourseService {
 
-    Boolean validateStudentCoursesAndReassign(String teacherId, String studentId);
+    CourseReassignmentResponse validateStudentCoursesAndReassign(String teacherId, String studentId);
 
-    Boolean existWeeklyCoursesByTeacherId(String teacherId);
+    CourseExistenceResponse existWeeklyCoursesByTeacherId(String teacherId);
 }

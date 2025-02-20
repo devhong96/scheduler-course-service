@@ -119,7 +119,7 @@ public class CourseServiceImpl implements CourseService {
 
     private void duplicateClassValidator(RegisterCourseRequest registerCourseRequest) {
 
-        List<StudentCourseResponse> StudentCourseList = courseRepository.getWeeklyCoursesForAllStudents();
+        List<StudentCourseResponse> StudentCourseList = courseRepository.getAllStudentsWeeklyCoursesForComparison();
 
         for (StudentCourseResponse StudentCourseResponse : StudentCourseList) {
             if (isOverlapping(StudentCourseResponse, registerCourseRequest)) {

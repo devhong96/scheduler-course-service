@@ -32,18 +32,22 @@ public class SecurityConfig {
             "/feign-member/**",
     };
     
-    public static final String[] ADMIN_RESTRICTED_ENDPOINTS = {
-
+    public static final String[] ADMIN_ENDPOINTS = {
+            "/admin/**"
     };
 
-    public static final String[] AUTHORIZED_ENDPOINTS = {
-
+    public static final String[] TEACHER_ENDPOINTS = {
+            "/teacher/**"
     };
+
+    public static final String[] STUDENT_ENDPOINTS = {
+            "/student/**"
+    };
+
 
     public static final String[] ENDPOINTS_WHITELISTS = {
             "/course-api/**",
             "/actuator/**",
-
     };
 
     @Bean
@@ -61,8 +65,9 @@ public class SecurityConfig {
                                         new WebExpressionAuthorizationManager(
                                                 "hasIpAddress('127.0.0.1') or hasIpAddress('172.18.0.0/16')")
                                 )
-                                .requestMatchers(ADMIN_RESTRICTED_ENDPOINTS).hasAuthority("ADMIN")
-                                .requestMatchers(AUTHORIZED_ENDPOINTS).hasAnyAuthority("ADMIN", "TEACHER")
+                                .requestMatchers(ADMIN_ENDPOINTS).hasAuthority("ADMIN")
+                                .requestMatchers(TEACHER_ENDPOINTS).hasAuthority("TEACHER")
+                                .requestMatchers(STUDENT_ENDPOINTS).hasAuthority("STUDENT")
                                 .requestMatchers(ENDPOINTS_WHITELISTS).permitAll()
                                 .anyRequest().authenticated()
                 )

@@ -3,29 +3,36 @@ package com.scheduler.courseservice.course.feign;
 import com.scheduler.courseservice.course.application.FeignCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseExistenceResponse;
+import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseReassignmentResponse;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("feign-course")
 @RequiredArgsConstructor
-public class FeignCourseController {
+public class FeignController {
 
     private final FeignCourseService feignCourseService;
 
     @Operation(summary = "선생님이 담당하는 학생들의 주간 수업 존재 여부 조회")
     @GetMapping("teacher/{teacherId}/courses")
-    Boolean existWeeklyCoursesByTeacherId(
+    public ResponseEntity<CourseExistenceResponse> existWeeklyCoursesByTeacherId(
             @PathVariable String teacherId
     ) {
-        return feignCourseService.existWeeklyCoursesByTeacherId(teacherId);
+        return new ResponseEntity<>(feignCourseService
+                .existWeeklyCoursesByTeacherId(teacherId), OK);
     }
 
     @Operation(summary = "학생과 선생님의 주간 코스 중복 확인 후, 변경")
     @PatchMapping("teacher/{teacherId}/student/{studentId}")
-    Boolean validateStudentCoursesAndReassign(
+    public ResponseEntity<CourseReassignmentResponse> validateStudentCoursesAndReassign(
             @PathVariable String teacherId,
             @PathVariable String studentId
     ) {
-        return feignCourseService.validateStudentCoursesAndReassign(teacherId, studentId);
+        return new ResponseEntity<>(feignCourseService
+                .validateStudentCoursesAndReassign(teacherId, studentId), OK);
     }
 }

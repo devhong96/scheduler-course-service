@@ -12,14 +12,14 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("class")
+@RequestMapping("student")
 @RequiredArgsConstructor
-public class CourseController {
+public class StudentCourseController {
 
     private final CourseService courseService;
 
     @Operation(description = "학생 본인 금주 수업 조회")
-    @GetMapping("findClass")
+    @GetMapping("find/class")
     public ResponseEntity<StudentCourseResponse> findClass(
             @RequestHeader("Authorization") String token,
             @RequestParam String username

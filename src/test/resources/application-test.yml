@@ -1,0 +1,58 @@
+spring:
+  jpa:
+    database: h2
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        highlight_sql: true
+
+  datasource: # jdbc
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+
+  mail: #email
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        protocol: smtp
+
+  sql:
+    init:
+      mode: embedded
+
+  security:
+    user:
+      name: user
+      password: 123
+  messages:
+    basename: errors
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 3000
+
+jwt:
+  secret_key: "ssssseeesasdcasdcasdcasdcasdcasdlckjkjlkjkjkjkjjjsadjasdjasjdasjdajd"
+
