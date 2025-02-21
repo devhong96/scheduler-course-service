@@ -37,7 +37,7 @@ public class StudentCourseController {
     }
 
     @Operation(description = "수업 변경")
-    @PostMapping("save")
+    @PostMapping("modify")
     public ResponseEntity<Void> modifyCourse(
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
