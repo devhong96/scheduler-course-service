@@ -1,15 +1,11 @@
 package com.scheduler.courseservice.course.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -23,30 +19,43 @@ public class CourseSchedule extends BaseEntity {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String studentId;
 
+    @Column(nullable = false)
     private String teacherId;
 
+    @Column(nullable = false)
     private Integer mondayClassHour;
 
+    @Column(nullable = false)
     private Integer tuesdayClassHour;
 
+    @Column(nullable = false)
     private Integer wednesdayClassHour;
 
+    @Column(nullable = false)
     private Integer thursdayClassHour;
 
+    @Column(nullable = false)
     private Integer fridayClassHour;
 
+    @Column(nullable = false)
     private Integer weekOfYear;
 
+    @Column(nullable = false)
     private Integer year;
 
     @Version
     private Long version;
 
-    public static CourseSchedule create(RegisterCourseRequest request, String teacherId) {
+
+    public static CourseSchedule create(
+            UpsertCourseRequest request, String teacherId, String studentId
+    ) {
         CourseSchedule courseSchedule = new CourseSchedule();
         courseSchedule.teacherId = teacherId;
+        courseSchedule.studentId = studentId;
         courseSchedule.mondayClassHour = request.getMondayClass();
         courseSchedule.tuesdayClassHour = request.getTuesdayClass();
         courseSchedule.wednesdayClassHour = request.getWednesdayClass();
@@ -55,12 +64,11 @@ public class CourseSchedule extends BaseEntity {
         return courseSchedule;
     }
 
-    public static CourseSchedule createBaseSchedule(StudentInfo studentInfo, int currentWeek, int currentYear) {
-        CourseSchedule courseSchedule = new CourseSchedule();
-        courseSchedule.year = currentYear;
-        courseSchedule.weekOfYear = currentWeek;
-        courseSchedule.studentId = studentInfo.getStudentId();
-        courseSchedule.teacherId = studentInfo.getTeacherId();
-        return courseSchedule;
+    public void updateSchedule(UpsertCourseRequest upsertCourseRequest) {
+        this.mondayClassHour = upsertCourseRequest.getMondayClass();
+        this.tuesdayClassHour = upsertCourseRequest.getTuesdayClass();
+        this.wednesdayClassHour = upsertCourseRequest.getWednesdayClass();
+        this.thursdayClassHour = upsertCourseRequest.getThursdayClass();
+        this.fridayClassHour = upsertCourseRequest.getFridayClass();
     }
 }

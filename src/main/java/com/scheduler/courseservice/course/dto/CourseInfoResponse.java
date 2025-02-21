@@ -12,6 +12,8 @@ public class CourseInfoResponse {
     @Setter
     public static class StudentCourseResponse {
 
+        private String studentId;
+
         private Integer mondayClass;
 
         private Integer tuesdayClass;

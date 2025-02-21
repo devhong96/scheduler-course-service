@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -28,11 +28,21 @@ public class StudentCourseController {
 
     @Operation(description = "수업 제출")
     @PostMapping("save")
-    public ResponseEntity<Void> submitForm(
+    public ResponseEntity<Void> submitCourse(
             @RequestHeader("Authorization") String token,
-            @Valid @RequestBody RegisterCourseRequest registerCourseRequest
+            @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
     ) {
-        courseService.saveClassTable(token, registerCourseRequest);
+        courseService.saveClassTable(token, upsertCourseRequest);
+        return new ResponseEntity<>(OK);
+    }
+
+    @Operation(description = "수업 변경")
+    @PostMapping("save")
+    public ResponseEntity<Void> modifyCourse(
+            @RequestHeader("Authorization") String token,
+            @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
+    ) {
+        courseService.modifyClassTable(token, upsertCourseRequest);
         return new ResponseEntity<>(OK);
     }
 }

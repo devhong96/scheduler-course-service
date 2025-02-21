@@ -5,10 +5,8 @@ import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,7 +17,7 @@ import java.util.Objects;
 
 import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
-import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 
@@ -28,9 +26,6 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
 
-    private static final String MEMBER_SERVICE = "memberService";
-
-    private final Resilience4JCircuitBreakerFactory circuitBreakerFactory;
     private final DateProvider dateProvider;
 
     private final MemberServiceClient memberServiceClient;
@@ -39,18 +34,12 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
-    @CircuitBreaker(name = MEMBER_SERVICE, fallbackMethod = "fallback")
     public Page<StudentCourseResponse> findAllStudentsCourses(
             Pageable pageable
     ) {
         return courseRepository.findAllStudentsCourses(pageable);
     }
 
-    private Page<StudentCourseResponse> fallback(Pageable pageable, Throwable t) {
-        log.warn("Fallback triggered due to: {}", t.getMessage());
-
-        return Page.empty(pageable);
-    }
 
     @Override
     @Transactional
@@ -93,31 +82,53 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public void saveClassTable(
-            String token, RegisterCourseRequest registerCourseRequest
+            String token, UpsertCourseRequest upsertCourseRequest
     ) {
-        duplicateClassValidator(registerCourseRequest);
+        duplicateClassValidator(upsertCourseRequest, null);
 
         StudentInfo studentInfo = memberServiceClient
                 .findStudentInfoByToken(token);
 
         CourseSchedule courseSchedule = CourseSchedule
-                .create(registerCourseRequest, studentInfo.getTeacherId());
+                .create(upsertCourseRequest, studentInfo.getTeacherId(), studentInfo.getStudentId());
 
         courseJpaRepository.save(courseSchedule);
     }
 
-    private void duplicateClassValidator(RegisterCourseRequest registerCourseRequest) {
+    @Override
+    @Transactional
+    public void modifyClassTable(String token, UpsertCourseRequest upsertCourseRequest) {
 
-        List<StudentCourseResponse> StudentCourseList = courseRepository.getAllStudentsWeeklyCoursesForComparison();
+        StudentInfo studentInfo = memberServiceClient
+                .findStudentInfoByToken(token);
 
-        for (StudentCourseResponse StudentCourseResponse : StudentCourseList) {
-            if (isOverlapping(StudentCourseResponse, registerCourseRequest)) {
+        CourseSchedule existingCourse = courseJpaRepository
+                .findCourseScheduleByStudentId((studentInfo.getStudentId()))
+                .orElseThrow(() -> new IllegalStateException("기존 수업을 찾을 수 없습니다."));
+
+        duplicateClassValidator(upsertCourseRequest, existingCourse);
+
+        existingCourse.updateSchedule(upsertCourseRequest);
+    }
+
+    private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
+
+        List<StudentCourseResponse> studentCourseList = courseRepository.getAllStudentsWeeklyCoursesForComparison();
+
+        for (StudentCourseResponse studentCourseResponse : studentCourseList) {
+
+            if (existingCourse != null &&
+                    studentCourseResponse.getStudentId().equals(existingCourse.getStudentId())) {
+                continue;
+            }
+
+            if (isOverlapping(studentCourseResponse, upsertCourseRequest)) {
                 throw new IllegalStateException("수업이 중복됩니다.");
             }
         }
     }
 
-    private boolean isOverlapping(StudentCourseResponse existing, RegisterCourseRequest newClass) {
+    private boolean isOverlapping(StudentCourseResponse existing, UpsertCourseRequest newClass) {
         return Objects.equals(existing.getMondayClass(), newClass.getMondayClass()) ||
                 Objects.equals(existing.getTuesdayClass(), newClass.getTuesdayClass()) ||
                 Objects.equals(existing.getWednesdayClass(), newClass.getWednesdayClass()) ||

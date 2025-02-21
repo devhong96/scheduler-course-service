@@ -78,6 +78,7 @@ public class CourseRepository {
 
         return queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
+                        courseSchedule.studentId,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,

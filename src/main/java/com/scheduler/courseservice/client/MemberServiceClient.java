@@ -10,7 +10,7 @@ import static com.scheduler.courseservice.client.dto.FeignMemberInfo.*;
 
 @FeignClient(
         name = "scheduler-member-service",
-        path = "/scheduler-member-service/feign-member/",
+        path = "/scheduler-member-service/feign-member",
         configuration = MemberFeignErrorDecoder.class
 )
 public interface MemberServiceClient {
@@ -20,10 +20,13 @@ public interface MemberServiceClient {
             @RequestHeader("Authorization") String token
     );
 
-    @GetMapping("memberInfo")
+    @GetMapping("member/info")
     MemberInfo findMemberInfoByToken(
             @RequestHeader("Authorization") String token
     );
 
-    TeacherInfo findTeachersClasses(String token);
+    @GetMapping("teacher/class")
+    TeacherInfo findTeachersClasses(
+            @RequestHeader("Authorization") String token
+    );
 }

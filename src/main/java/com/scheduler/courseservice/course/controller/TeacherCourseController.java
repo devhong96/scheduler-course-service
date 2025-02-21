@@ -1,7 +1,6 @@
 package com.scheduler.courseservice.course.controller;
 
 import com.scheduler.courseservice.course.application.CourseService;
-import com.scheduler.courseservice.course.component.DateProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import static org.springframework.http.HttpStatus.OK;
 public class TeacherCourseController {
 
     private final CourseService courseService;
-    private final DateProvider dateProvider;
 
     @Operation(description = "선생님 버전 조회")
     @GetMapping("class")

@@ -1,9 +1,11 @@
 package com.scheduler.courseservice.course.application;
 
+import com.scheduler.courseservice.course.dto.CourseInfoRequest;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoRequest.RegisterCourseRequest;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 
@@ -15,6 +17,7 @@ public interface CourseService {
 
       StudentCourseResponse findStudentClasses(String token);
 
-      void saveClassTable(String token, RegisterCourseRequest registerCourseRequest);
+      void saveClassTable(String token, UpsertCourseRequest upsertCourseRequest);
 
+      void modifyClassTable(String token, @Valid CourseInfoRequest.UpsertCourseRequest upsertCourseRequest);
 }
