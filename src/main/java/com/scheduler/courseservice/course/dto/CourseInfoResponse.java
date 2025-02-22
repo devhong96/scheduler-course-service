@@ -14,15 +14,15 @@ public class CourseInfoResponse {
 
         private String studentId;
 
-        private Integer mondayClass;
+        private Integer mondayClassHour;
 
-        private Integer tuesdayClass;
+        private Integer tuesdayClassHour;
 
-        private Integer wednesdayClass;
+        private Integer wednesdayClassHour;
 
-        private Integer thursdayClass;
+        private Integer thursdayClassHour;
 
-        private Integer fridayClass;
+        private Integer fridayClassHour;
     }
 
     @Getter
