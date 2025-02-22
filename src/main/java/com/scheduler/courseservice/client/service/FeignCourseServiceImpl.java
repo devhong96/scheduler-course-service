@@ -46,11 +46,11 @@ public class FeignCourseServiceImpl implements FeignCourseService {
         }
 
         for (StudentCourseResponse teacherCourse : weekCourseByTeacherId) {
-            checkConflict("월요일", teacherCourse.getMondayClass(), weeklyCoursesByStudentId.getMondayClass());
-            checkConflict("화요일", teacherCourse.getTuesdayClass(), weeklyCoursesByStudentId.getTuesdayClass());
-            checkConflict("수요일", teacherCourse.getWednesdayClass(), weeklyCoursesByStudentId.getWednesdayClass());
-            checkConflict("목요일", teacherCourse.getThursdayClass(), weeklyCoursesByStudentId.getThursdayClass());
-            checkConflict("금요일", teacherCourse.getFridayClass(), weeklyCoursesByStudentId.getFridayClass());
+            checkConflict("월요일", teacherCourse.getMondayClassHour(), weeklyCoursesByStudentId.getMondayClassHour());
+            checkConflict("화요일", teacherCourse.getTuesdayClassHour(), weeklyCoursesByStudentId.getTuesdayClassHour());
+            checkConflict("수요일", teacherCourse.getWednesdayClassHour(), weeklyCoursesByStudentId.getWednesdayClassHour());
+            checkConflict("목요일", teacherCourse.getThursdayClassHour(), weeklyCoursesByStudentId.getThursdayClassHour());
+            checkConflict("금요일", teacherCourse.getFridayClassHour(), weeklyCoursesByStudentId.getFridayClassHour());
         }
     }
 

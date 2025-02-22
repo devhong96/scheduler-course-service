@@ -58,11 +58,11 @@ public class CourseServiceImpl implements CourseService {
         CourseList classList = CourseList.getInstance();
 
         for (StudentCourseResponse studentCourseResponse : studentClassByTeacherName) {
-            classList.getMondayClassList().add(studentCourseResponse.getMondayClass());
-            classList.getTuesdayClassList().add(studentCourseResponse.getTuesdayClass());
-            classList.getWednesdayClassList().add(studentCourseResponse.getWednesdayClass());
-            classList.getThursdayClassList().add(studentCourseResponse.getThursdayClass());
-            classList.getFridayClassList().add(studentCourseResponse.getFridayClass());
+            classList.getMondayClassList().add(studentCourseResponse.getMondayClassHour());
+            classList.getTuesdayClassList().add(studentCourseResponse.getTuesdayClassHour());
+            classList.getWednesdayClassList().add(studentCourseResponse.getWednesdayClassHour());
+            classList.getThursdayClassList().add(studentCourseResponse.getThursdayClassHour());
+            classList.getFridayClassList().add(studentCourseResponse.getFridayClassHour());
         }
 
         return classList;
@@ -129,11 +129,11 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private boolean isOverlapping(StudentCourseResponse existing, UpsertCourseRequest newClass) {
-        return Objects.equals(existing.getMondayClass(), newClass.getMondayClass()) ||
-                Objects.equals(existing.getTuesdayClass(), newClass.getTuesdayClass()) ||
-                Objects.equals(existing.getWednesdayClass(), newClass.getWednesdayClass()) ||
-                Objects.equals(existing.getThursdayClass(), newClass.getThursdayClass()) ||
-                Objects.equals(existing.getFridayClass(), newClass.getFridayClass());
+        return Objects.equals(existing.getMondayClassHour(), newClass.getMondayClass()) ||
+                Objects.equals(existing.getTuesdayClassHour(), newClass.getTuesdayClass()) ||
+                Objects.equals(existing.getWednesdayClassHour(), newClass.getWednesdayClass()) ||
+                Objects.equals(existing.getThursdayClassHour(), newClass.getThursdayClass()) ||
+                Objects.equals(existing.getFridayClassHour(), newClass.getFridayClass());
     }
 
 }
