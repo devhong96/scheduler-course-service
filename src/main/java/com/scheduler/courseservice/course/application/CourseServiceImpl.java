@@ -78,8 +78,7 @@ public class CourseServiceImpl implements CourseService {
     public StudentCourseResponse findStudentClasses(
             String token
     ) {
-        StudentInfo studentInfo = memberServiceClient
-                .findStudentInfoByToken(token);
+        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
         String studentId = studentInfo.getStudentId();
         return courseRepository.getWeeklyCoursesByStudentId(studentId);

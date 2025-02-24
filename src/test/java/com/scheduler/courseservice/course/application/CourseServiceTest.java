@@ -3,19 +3,22 @@ package com.scheduler.courseservice.course.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.scheduler.courseservice.course.component.DateProvider;
+import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
@@ -24,17 +27,17 @@ class CourseServiceTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Mock
-    private DateProvider dateProvider;
-
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private MemberServiceClient memberServiceClient;
 
     @MockitoBean
     private WireMockServer wireMockServer;
 
     final static String token = "Bearer test-token";
-    final static int mockYear = 2024;
+    final static int mockYear = 2025;
     final static int mockWeek = 10;
 
     @BeforeEach
@@ -46,17 +49,22 @@ class CourseServiceTest {
 
     @AfterEach
     void tearDown() {
-        wireMockServer.resetAll();
+        wireMockServer.stop();
     }
 
     @Test
+    void findAllStudentsCourses() {
+    }
+
+    @Test
+    @DisplayName("교사에게 할당된 수업 수")
     void findTeachersClasses() throws JsonProcessingException {
 
-        TeacherInfo mockTeacherInfo = new TeacherInfo("teacherId");
         // Given
-        final String expectedResponse = objectMapper.writeValueAsString(mockTeacherInfo);
+        final String expectedResponse = objectMapper
+                .writeValueAsString(new TeacherInfo("teacher_001"));
 
-        stubFor(get(urlEqualTo("/feign-member/teacher/class"))
+        stubFor(get(urlEqualTo("/feign-member/teacher/info"))
                 .withHeader("Authorization", matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -67,16 +75,28 @@ class CourseServiceTest {
         CourseList teachersClasses = courseService
                 .findTeachersClasses(token, mockYear, mockWeek);
 
-        System.out.println("teachersClasses = " + teachersClasses.getFridayClassList());
-
+        int size = teachersClasses.getFridayClassList().size();
+        assertThat(2).isEqualTo(size);
     }
 
     @Test
-    void findAllStudentsCourses() {
-    }
+    @DisplayName("학생의 클래스 찾기")
+    void findStudentClasses() throws JsonProcessingException {
 
-    @Test
-    void findStudentClasses() {
+        final String expectedResponse = objectMapper
+                .writeValueAsString(new StudentInfo("teacher_001", "student_001", "Alice Kim"));
+
+        stubFor(get(urlEqualTo("/feign-member/student/info"))
+                .withHeader("Authorization", matching(".*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withBody(expectedResponse)
+                ));
+
+        StudentCourseResponse studentClasses = courseService.findStudentClasses(token);
+
+
     }
 
     @Test
@@ -86,5 +106,4 @@ class CourseServiceTest {
     @Test
     void modifyClassTable() {
     }
-
 }

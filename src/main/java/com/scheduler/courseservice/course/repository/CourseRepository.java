@@ -114,7 +114,7 @@ public class CourseRepository {
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();
 
-        return queryFactory
+        StudentCourseResponse result = queryFactory
                 .select(
                         Projections.fields(StudentCourseResponse.class,
                                 courseSchedule.studentId,
@@ -133,6 +133,8 @@ public class CourseRepository {
                         weekOfYearEq(currentWeek)
                 )
                 .fetchOne();
+
+        return result != null ? result : new StudentCourseResponse();
     }
 
     public List<StudentCourseResponse> getStudentClassByTeacherId(

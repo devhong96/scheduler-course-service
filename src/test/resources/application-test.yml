@@ -1,10 +1,14 @@
 spring:
+  cloud:
+    config:
+      enabled: false
 
   jpa:
     database: h2
     open-in-view: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
+    defer-datasource-initialization: true
 
   data:
     redis:
@@ -33,6 +37,8 @@ spring:
   sql:
     init:
       mode: embedded
+      schema-locations: classpath:/scheme.sql
+      data-locations: classpath:/data.sql
 
   security:
     user:
@@ -46,7 +52,7 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
 
-member_service_url: http://localhost:8080
+scheduler_member_service_url: http://localhost:8080
 
 management:
   endpoints:

@@ -1,6 +1,6 @@
 package com.scheduler.courseservice.course.component;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ public class DateProvider {
     private int currentYear;
     private int currentWeek;
 
-    @PostConstruct
+    @PrePersist
     public void init() {
         updateDate(); // 서버 시작 시 한 번 실행
     }
