@@ -8,15 +8,17 @@ import com.scheduler.courseservice.course.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
+import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
@@ -37,7 +39,12 @@ public class CourseServiceImpl implements CourseService {
     public Page<StudentCourseResponse> findAllStudentsCourses(
             Pageable pageable
     ) {
-        return courseRepository.findAllStudentsCourses(pageable);
+        Map<String, Object> cachedData = courseRepository.findAllStudentsCoursesCache(pageable);
+
+        List<StudentCourseResponse> contents = (List<StudentCourseResponse>) cachedData.get("content");
+        Long totalCount = (Long) cachedData.get("totalCount");
+
+        return new PageImpl<>(contents, pageable, totalCount);
     }
 
 
@@ -45,8 +52,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
 
-        TeacherInfo teacherInfo = memberServiceClient
-                .findTeachersClasses(token);
+        TeacherInfo teacherInfo = memberServiceClient.findTeachersClasses(token);
 
         String teacherId = teacherInfo.getTeacherId();
         int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
@@ -90,7 +96,7 @@ public class CourseServiceImpl implements CourseService {
                 .findStudentInfoByToken(token);
 
         CourseSchedule courseSchedule = CourseSchedule
-                .create(upsertCourseRequest, studentInfo.getTeacherId(), studentInfo.getStudentId());
+                .create(upsertCourseRequest, studentInfo.getTeacherId(), studentInfo);
 
         courseJpaRepository.save(courseSchedule);
     }
@@ -129,11 +135,11 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private boolean isOverlapping(StudentCourseResponse existing, UpsertCourseRequest newClass) {
-        return Objects.equals(existing.getMondayClassHour(), newClass.getMondayClass()) ||
-                Objects.equals(existing.getTuesdayClassHour(), newClass.getTuesdayClass()) ||
-                Objects.equals(existing.getWednesdayClassHour(), newClass.getWednesdayClass()) ||
-                Objects.equals(existing.getThursdayClassHour(), newClass.getThursdayClass()) ||
-                Objects.equals(existing.getFridayClassHour(), newClass.getFridayClass());
+        return Objects.equals(existing.getMondayClassHour(), newClass.getMondayClassHour()) ||
+                Objects.equals(existing.getTuesdayClassHour(), newClass.getTuesdayClassHour()) ||
+                Objects.equals(existing.getWednesdayClassHour(), newClass.getWednesdayClassHour()) ||
+                Objects.equals(existing.getThursdayClassHour(), newClass.getThursdayClassHour()) ||
+                Objects.equals(existing.getFridayClassHour(), newClass.getFridayClassHour());
     }
 
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -26,6 +27,9 @@ public class CourseSchedule extends BaseEntity {
     private String teacherId;
 
     @Column(nullable = false)
+    private String studentName;
+
+    @Column(nullable = false)
     private Integer mondayClassHour;
 
     @Column(nullable = false)
@@ -44,31 +48,32 @@ public class CourseSchedule extends BaseEntity {
     private Integer weekOfYear;
 
     @Column(nullable = false)
-    private Integer year;
+    private Integer courseYear;
 
     @Version
     private Long version;
 
 
     public static CourseSchedule create(
-            UpsertCourseRequest request, String teacherId, String studentId
+            UpsertCourseRequest request, String teacherId, StudentInfo studentInfo
     ) {
         CourseSchedule courseSchedule = new CourseSchedule();
         courseSchedule.teacherId = teacherId;
-        courseSchedule.studentId = studentId;
-        courseSchedule.mondayClassHour = request.getMondayClass();
-        courseSchedule.tuesdayClassHour = request.getTuesdayClass();
-        courseSchedule.wednesdayClassHour = request.getWednesdayClass();
-        courseSchedule.thursdayClassHour = request.getThursdayClass();
-        courseSchedule.fridayClassHour = request.getFridayClass();
+        courseSchedule.studentId = studentInfo.getStudentId();
+        courseSchedule.studentName = studentInfo.getStudentName();
+        courseSchedule.mondayClassHour = request.getMondayClassHour();
+        courseSchedule.tuesdayClassHour = request.getTuesdayClassHour();
+        courseSchedule.wednesdayClassHour = request.getWednesdayClassHour();
+        courseSchedule.thursdayClassHour = request.getThursdayClassHour();
+        courseSchedule.fridayClassHour = request.getFridayClassHour();
         return courseSchedule;
     }
 
     public void updateSchedule(UpsertCourseRequest upsertCourseRequest) {
-        this.mondayClassHour = upsertCourseRequest.getMondayClass();
-        this.tuesdayClassHour = upsertCourseRequest.getTuesdayClass();
-        this.wednesdayClassHour = upsertCourseRequest.getWednesdayClass();
-        this.thursdayClassHour = upsertCourseRequest.getThursdayClass();
-        this.fridayClassHour = upsertCourseRequest.getFridayClass();
+        this.mondayClassHour = upsertCourseRequest.getMondayClassHour();
+        this.tuesdayClassHour = upsertCourseRequest.getTuesdayClassHour();
+        this.wednesdayClassHour = upsertCourseRequest.getWednesdayClassHour();
+        this.thursdayClassHour = upsertCourseRequest.getThursdayClassHour();
+        this.fridayClassHour = upsertCourseRequest.getFridayClassHour();
     }
 }

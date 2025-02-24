@@ -12,18 +12,18 @@ public class CourseInfoRequest {
 
         // 수업 시간
         @NotNull(message = "요일을 선택해 주세요")
-        private Integer mondayClass;
+        private Integer mondayClassHour;
 
         @NotNull(message = "요일을 선택해 주세요")
-        private Integer tuesdayClass;
+        private Integer tuesdayClassHour;
 
         @NotNull(message = "요일을 선택해 주세요")
-        private Integer wednesdayClass;
+        private Integer wednesdayClassHour;
 
         @NotNull(message = "요일을 선택해 주세요")
-        private Integer thursdayClass;
+        private Integer thursdayClassHour;
 
         @NotNull(message = "요일을 선택해 주세요")
-        private Integer fridayClass;
+        private Integer fridayClassHour;
     }
 }

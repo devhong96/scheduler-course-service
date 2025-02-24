@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.client.service;
+package com.scheduler.courseservice.client.request.service;
 
 import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
@@ -62,7 +62,7 @@ public class FeignCourseServiceImpl implements FeignCourseService {
 
     @Override
     public CourseExistenceResponse existWeeklyCoursesByTeacherId(String teacherId) {
-        Boolean exists = courseJpaRepository.existsByTeacherIdAndWeekOfYearAndYear(
+        Boolean exists = courseJpaRepository.existsByTeacherIdAndWeekOfYearAndCourseYear(
                 teacherId,
                 dateProvider.getCurrentWeek(),
                 dateProvider.getCurrentYear()

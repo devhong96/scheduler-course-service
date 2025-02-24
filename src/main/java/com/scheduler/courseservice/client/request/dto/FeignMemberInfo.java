@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.client.dto;
+package com.scheduler.courseservice.client.request.dto;
 
 import com.scheduler.courseservice.client.RoleType;
 import lombok.Getter;
@@ -21,6 +21,10 @@ public class FeignMemberInfo {
     public static class TeacherInfo {
 
         private String teacherId;
+
+        public TeacherInfo(String teacherId) {
+            this.teacherId = teacherId;
+        }
     }
 
     @Getter

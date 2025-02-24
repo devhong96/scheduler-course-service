@@ -14,6 +14,8 @@ public class CourseInfoResponse {
 
         private String studentId;
 
+        private String studentName;
+
         private Integer mondayClassHour;
 
         private Integer tuesdayClassHour;
@@ -23,6 +25,10 @@ public class CourseInfoResponse {
         private Integer thursdayClassHour;
 
         private Integer fridayClassHour;
+
+        private Integer courseYear;
+
+        private Integer weekOfYear;
     }
 
     @Getter
