@@ -2,6 +2,7 @@ package com.scheduler.courseservice.course.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ public class CourseInfoResponse {
 
     @Getter
     @Setter
+    @ToString
     public static class StudentCourseResponse {
 
         private String studentId;

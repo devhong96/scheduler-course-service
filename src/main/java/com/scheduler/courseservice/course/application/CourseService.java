@@ -15,7 +15,7 @@ public interface CourseService {
 
       CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear);
 
-      StudentCourseResponse findStudentClasses(String token);
+      StudentCourseResponse findStudentClasses(String token, Integer year, Integer weekOfYear);
 
       void saveClassTable(String token, UpsertCourseRequest upsertCourseRequest);
 

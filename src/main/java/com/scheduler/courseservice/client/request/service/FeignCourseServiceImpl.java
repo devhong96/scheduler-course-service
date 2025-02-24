@@ -25,8 +25,10 @@ public class FeignCourseServiceImpl implements FeignCourseService {
     @Transactional
     public CourseReassignmentResponse validateStudentCoursesAndReassign(String teacherId, String studentId) {
 
-        List<StudentCourseResponse> teacherCourses = courseRepository.getTeacherWeeklyCoursesForComparison(teacherId);
-        StudentCourseResponse studentCourses = courseRepository.getWeeklyCoursesByStudentId(studentId);
+        List<StudentCourseResponse> teacherCourses = courseRepository
+                .getTeacherWeeklyCoursesForComparison(teacherId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
+        StudentCourseResponse studentCourses = courseRepository
+                .getWeeklyCoursesByStudentId(studentId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
 
         if (teacherCourses == null || studentCourses == null) {
             throw new IllegalArgumentException("주간 수업 데이터를 찾을 수 없습니다.");

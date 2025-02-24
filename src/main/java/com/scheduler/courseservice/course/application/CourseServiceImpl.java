@@ -76,12 +76,15 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public StudentCourseResponse findStudentClasses(
-            String token
+            String token, Integer year, Integer weekOfYear
     ) {
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
         String studentId = studentInfo.getStudentId();
-        return courseRepository.getWeeklyCoursesByStudentId(studentId);
+        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
+
+        return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
     }
 
     @Override
@@ -118,7 +121,8 @@ public class CourseServiceImpl implements CourseService {
 
     private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
 
-        List<StudentCourseResponse> studentCourseList = courseRepository.getAllStudentsWeeklyCoursesForComparison();
+        List<StudentCourseResponse> studentCourseList = courseRepository
+                .getAllStudentsWeeklyCoursesForComparison(dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
 
         for (StudentCourseResponse studentCourseResponse : studentCourseList) {
 
