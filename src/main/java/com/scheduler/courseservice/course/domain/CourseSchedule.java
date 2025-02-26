@@ -55,7 +55,7 @@ public class CourseSchedule extends BaseEntity {
     private Integer courseYear;
 
     @Version
-    private Long version;
+    private Long version = 0L;
 
 
     public static CourseSchedule create(

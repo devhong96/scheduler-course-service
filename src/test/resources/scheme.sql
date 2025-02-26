@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS course_schedule (
     friday_class_hour INT CHECK (friday_class_hour BETWEEN 0 AND 10),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    version INT,
+    version INT DEFAULT 0,
     FOREIGN KEY (teacher_id) REFERENCES teacher(teacher_id),
     FOREIGN KEY (student_id) REFERENCES student(student_id)
 

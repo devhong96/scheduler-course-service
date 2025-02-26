@@ -1,7 +1,6 @@
 package com.scheduler.courseservice.course.application;
 
 import com.scheduler.courseservice.client.MemberServiceClient;
-import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
@@ -14,10 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
+import java.util.*;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
@@ -31,11 +29,13 @@ import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStu
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
 
-    private final DateProvider dateProvider;
+//    private final DateProvider dateProvider;
 
     private final MemberServiceClient memberServiceClient;
     private final CourseRepository courseRepository;
     private final CourseJpaRepository courseJpaRepository;
+
+    private final LocalDate localDate = LocalDate.now();
 
     @Override
     @Transactional
@@ -57,8 +57,8 @@ public class CourseServiceImpl implements CourseService {
         TeacherInfo teacherInfo = memberServiceClient.findTeachersClasses(token);
 
         String teacherId = teacherInfo.getTeacherId();
-        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
-        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
+        int finalYear = (year != null) ? year : localDate.getYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
 
         List<StudentCourseResponse> studentClassByTeacherName = courseRepository
                 .getStudentClassByTeacherId(teacherId, finalYear, finalWeekOfYear);
@@ -83,8 +83,8 @@ public class CourseServiceImpl implements CourseService {
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
         String studentId = studentInfo.getStudentId();
-        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
-        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
+        int finalYear = (year != null) ? year : localDate.getYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
 
         return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
     }
@@ -137,7 +137,7 @@ public class CourseServiceImpl implements CourseService {
     private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
 
         List<StudentCourseResponse> studentCourseList = courseRepository
-                .getAllStudentsWeeklyCoursesForComparison(2025, 10);
+                .getAllStudentsWeeklyCoursesForComparison(localDate.getYear(), localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear()));
 
         for (StudentCourseResponse studentCourseResponse : studentCourseList) {
             System.out.println(studentCourseResponse.toString());

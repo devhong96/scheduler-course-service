@@ -162,8 +162,48 @@ class CourseServiceTest {
     }
 
     @Test
-    void modifyClassTable() {
-//        courseService.modifyClassTable();
+    @DisplayName("수업 수정")
+    void modifyClassTable() throws JsonProcessingException {
+
+        final String expectedResponse = objectMapper
+                .writeValueAsString(new StudentInfo("teacher_001", "student_010", "Jack Kang"));
+
+        stubFor(get(urlEqualTo("/feign-member/student/info"))
+                .withHeader("Authorization", matching(".*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withBody(expectedResponse)
+                ));
+
+        UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
+        upsertCourseRequest.setMondayClassHour(0);
+        upsertCourseRequest.setTuesdayClassHour(0);
+        upsertCourseRequest.setWednesdayClassHour(0);
+        upsertCourseRequest.setThursdayClassHour(0);
+        upsertCourseRequest.setFridayClassHour(0);
+
+        courseService.modifyClassTable(token, upsertCourseRequest);
+
+        CourseSchedule student = courseJpaRepository
+                .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
+                        "student_010",
+                        2025,
+                        10
+                )
+                .orElseThrow(NoSuchElementException::new);
+
+        assertThat(student)
+                .extracting(
+                        CourseSchedule::getStudentId, CourseSchedule::getTeacherId, CourseSchedule::getStudentName,
+                        CourseSchedule::getMondayClassHour, CourseSchedule::getTuesdayClassHour, CourseSchedule::getWednesdayClassHour, CourseSchedule::getThursdayClassHour, CourseSchedule::getFridayClassHour,
+                        CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
+                )
+                .containsExactly(
+                        "student_010", "teacher_001", "Jack Kang",
+                        0, 0, 0, 0, 0,
+                        2025, 10
+                );
     }
 
     @Test
