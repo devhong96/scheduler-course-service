@@ -6,10 +6,14 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.testSet.IntegrationTest;
+import com.scheduler.courseservice.testSet.messaging.ChangeStudentNameRequest;
+import com.scheduler.courseservice.testSet.messaging.TestRabbitConsumer;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.mockito.Spy;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
@@ -27,6 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
+@Import(TestRabbitConsumer.class)
 class CourseServiceTest {
 
     @Autowired
@@ -37,6 +42,9 @@ class CourseServiceTest {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private TestRabbitConsumer testRabbitConsumer;
 
     @Spy
     private static WireMockServer wireMockServer;
@@ -207,7 +215,18 @@ class CourseServiceTest {
     }
 
     @Test
-    void changeStudentName() {
-//        rabbitTemplate.convertAndSend("student-change-queue", "student-change");
+    @DisplayName("레빗 엠큐-학생 이름 변경")
+    void changeStudentName() throws InterruptedException {
+        ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();
+        changeStudentNameRequest.setStudentId("student_010");
+        changeStudentNameRequest.setStudentName("Jack Kang");
+
+        rabbitTemplate.convertAndSend("student.exchange", "student.name.update", changeStudentNameRequest);
+
+        ChangeStudentNameRequest received = testRabbitConsumer.getReceivedMessage();
+
+        Assertions.assertThat(received)
+                .extracting("studentName", "studentId")
+                .containsExactly("Jack Kang", "student_010");
     }
 }
