@@ -40,9 +40,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // cahce
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
-
     // AOP
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
@@ -67,9 +64,9 @@ dependencies {
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
 
     // JWT
-    implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.12.5'
-    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.12.5'
-    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.12.5'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.12.6'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.12.6'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.12.6'
 
     // SECURITY
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -93,6 +90,9 @@ dependencies {
     testImplementation ('it.ozimov:embedded-redis:0.7.3') {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
+
+    testImplementation 'org.testcontainers:rabbitmq:1.20.5'
+
     testImplementation 'com.h2database:h2'
     implementation 'org.wiremock.integrations:wiremock-spring-boot:3.6.0'
     testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.2.0'

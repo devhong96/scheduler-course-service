@@ -5,6 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
+import java.util.Locale;
+
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -66,6 +70,10 @@ public class CourseSchedule extends BaseEntity {
         courseSchedule.wednesdayClassHour = request.getWednesdayClassHour();
         courseSchedule.thursdayClassHour = request.getThursdayClassHour();
         courseSchedule.fridayClassHour = request.getFridayClassHour();
+
+        LocalDate now = LocalDate.now();
+        courseSchedule.courseYear = now.getYear();
+        courseSchedule.weekOfYear = now.get(WeekFields.of(Locale.getDefault()).weekOfYear());
         return courseSchedule;
     }
 
@@ -75,5 +83,9 @@ public class CourseSchedule extends BaseEntity {
         this.wednesdayClassHour = upsertCourseRequest.getWednesdayClassHour();
         this.thursdayClassHour = upsertCourseRequest.getThursdayClassHour();
         this.fridayClassHour = upsertCourseRequest.getFridayClassHour();
+    }
+
+    public void updateStudentName(String studentName) {
+        this.studentName = studentName;
     }
 }

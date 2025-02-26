@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.redis;
+package com.scheduler.courseservice.testSet.redis;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

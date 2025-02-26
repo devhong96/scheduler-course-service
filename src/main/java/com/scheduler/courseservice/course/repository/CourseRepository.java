@@ -41,7 +41,8 @@ public class CourseRepository {
                         courseSchedule.thursdayClassHour,
                         courseSchedule.fridayClassHour,
                         courseSchedule.courseYear,
-                        courseSchedule.weekOfYear))
+                        courseSchedule.weekOfYear
+                ))
                 .from(courseSchedule)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -72,7 +73,8 @@ public class CourseRepository {
                         courseSchedule.thursdayClassHour,
                         courseSchedule.fridayClassHour,
                         courseSchedule.courseYear,
-                        courseSchedule.weekOfYear))
+                        courseSchedule.weekOfYear
+                ))
                 .from(courseSchedule)
                 .where(
                         yearEq(year),
@@ -95,11 +97,13 @@ public class CourseRepository {
                         courseSchedule.thursdayClassHour,
                         courseSchedule.fridayClassHour,
                         courseSchedule.courseYear,
-                        courseSchedule.weekOfYear))
+                        courseSchedule.weekOfYear
+                ))
                 .from(courseSchedule)
                 .where(
                         yearEq(year),
-                        weekOfYearEq(weekOfYear))
+                        weekOfYearEq(weekOfYear)
+                )
                 .fetch();
     }
 
@@ -117,7 +121,8 @@ public class CourseRepository {
                                 courseSchedule.thursdayClassHour,
                                 courseSchedule.fridayClassHour,
                                 courseSchedule.courseYear,
-                                courseSchedule.weekOfYear))
+                                courseSchedule.weekOfYear
+                        ))
                 .from(courseSchedule)
                 .where(
                         studentIdEq(studentId),
@@ -142,11 +147,13 @@ public class CourseRepository {
                         courseSchedule.thursdayClassHour,
                         courseSchedule.fridayClassHour,
                         courseSchedule.courseYear,
-                        courseSchedule.weekOfYear))
+                        courseSchedule.weekOfYear
+                ))
                 .from(courseSchedule)
                 .where(teacherIdEq(teacherId),
                         yearEq(year),
-                        weekOfYearEq(weekOfYear))
+                        weekOfYearEq(weekOfYear)
+                )
                 .fetch();
     }
 

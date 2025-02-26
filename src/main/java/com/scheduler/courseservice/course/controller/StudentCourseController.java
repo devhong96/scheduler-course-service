@@ -19,7 +19,7 @@ public class StudentCourseController {
     private final CourseService courseService;
 
     @Operation(description = "학생 본인 금주 수업 조회")
-    @GetMapping("find/class")
+    @GetMapping("class")
     public ResponseEntity<StudentCourseResponse> findClass(
             @RequestHeader("Authorization") String token,
             @RequestParam(required = false) Integer year,
@@ -29,7 +29,7 @@ public class StudentCourseController {
     }
 
     @Operation(description = "수업 제출")
-    @PostMapping("save")
+    @PostMapping("class")
     public ResponseEntity<Void> submitCourse(
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
@@ -39,7 +39,7 @@ public class StudentCourseController {
     }
 
     @Operation(description = "수업 변경")
-    @PostMapping("modify")
+    @PatchMapping("class")
     public ResponseEntity<Void> modifyCourse(
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest

@@ -27,6 +27,7 @@ public class FeignCourseServiceImpl implements FeignCourseService {
 
         List<StudentCourseResponse> teacherCourses = courseRepository
                 .getTeacherWeeklyCoursesForComparison(teacherId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
+
         StudentCourseResponse studentCourses = courseRepository
                 .getWeeklyCoursesByStudentId(studentId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
 

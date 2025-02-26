@@ -5,6 +5,7 @@ import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
+import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
@@ -22,6 +24,7 @@ import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.Tea
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStudentName;
 
 @Slf4j
 @Service
@@ -46,7 +49,6 @@ public class CourseServiceImpl implements CourseService {
 
         return new PageImpl<>(contents, pageable, totalCount);
     }
-
 
     @Override
     @Transactional
@@ -119,10 +121,27 @@ public class CourseServiceImpl implements CourseService {
         existingCourse.updateSchedule(upsertCourseRequest);
     }
 
+    @Override
+    @Transactional
+    public void changeStudentName(ChangeStudentName changeStudentName) {
+
+        String studentId = changeStudentName.getStudentId();
+
+        CourseSchedule courseSchedule = courseJpaRepository
+                .findCourseScheduleByStudentId(studentId)
+                .orElseThrow(NoSuchElementException::new);
+
+        courseSchedule.updateStudentName(changeStudentName.getStudentName());
+    }
+
     private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
 
         List<StudentCourseResponse> studentCourseList = courseRepository
-                .getAllStudentsWeeklyCoursesForComparison(dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
+                .getAllStudentsWeeklyCoursesForComparison(2025, 10);
+
+        for (StudentCourseResponse studentCourseResponse : studentCourseList) {
+            System.out.println(studentCourseResponse.toString());
+        }
 
         for (StudentCourseResponse studentCourseResponse : studentCourseList) {
 
@@ -132,7 +151,7 @@ public class CourseServiceImpl implements CourseService {
             }
 
             if (isOverlapping(studentCourseResponse, upsertCourseRequest)) {
-                throw new IllegalStateException("수업이 중복됩니다.");
+                throw new DuplicateCourseException("수업이 중복됩니다.");
             }
         }
     }

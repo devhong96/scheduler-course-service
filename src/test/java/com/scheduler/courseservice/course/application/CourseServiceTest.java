@@ -3,15 +3,24 @@ package com.scheduler.courseservice.course.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.scheduler.courseservice.course.domain.CourseSchedule;
+import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import org.junit.jupiter.api.*;
 import org.mockito.Spy;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
+import java.util.Locale;
+import java.util.NoSuchElementException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -26,12 +35,17 @@ class CourseServiceTest {
     @Autowired
     private CourseService courseService;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @Spy
     private static WireMockServer wireMockServer;
 
     final static String token = "Bearer test-token";
     final static int mockYear = 2025;
     final static int mockWeek = 10;
+    @Autowired
+    private CourseJpaRepository courseJpaRepository;
 
     @BeforeAll
     static void startWireMockServer() {
@@ -91,9 +105,69 @@ class CourseServiceTest {
 
         StudentCourseResponse studentClasses = courseService.findStudentClasses(token, mockYear, mockWeek);
 
-        assertThat(studentClasses.getStudentId()).isEqualTo("student_010");
-        assertThat(studentClasses.getStudentName()).isEqualTo("Jack Kang");
+        assertThat(studentClasses)
+                .extracting(
+                "studentId", "studentName",
+                        "mondayClassHour", "tuesdayClassHour", "wednesdayClassHour", "thursdayClassHour", "fridayClassHour",
+                        "courseYear", "weekOfYear")
+                .containsExactly(
+                        "student_010", "Jack Kang",
+                        2, 3, 2, 1, 3,
+                        2025, 10
+                );
 
     }
 
+    @Test
+    @DisplayName("수업 저장")
+    void saveClassTable() throws JsonProcessingException {
+
+        final String expectedResponse = objectMapper
+                .writeValueAsString(new StudentInfo("teacher_001", "student_010", "Jack Kang"));
+
+        stubFor(get(urlEqualTo("/feign-member/student/info"))
+                .withHeader("Authorization", matching(".*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withBody(expectedResponse)
+                ));
+
+        UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
+        upsertCourseRequest.setMondayClassHour(1);
+        upsertCourseRequest.setTuesdayClassHour(4);
+        upsertCourseRequest.setWednesdayClassHour(3);
+        upsertCourseRequest.setThursdayClassHour(2);
+        upsertCourseRequest.setFridayClassHour(5);
+
+        courseService.saveClassTable(token, upsertCourseRequest);
+
+        CourseSchedule student = courseJpaRepository
+                .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear("student_010",
+                        LocalDate.now().getYear(),
+                        LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear()))
+                .orElseThrow(NoSuchElementException::new);
+
+        assertThat(student)
+                .extracting(
+                        CourseSchedule::getStudentId, CourseSchedule::getTeacherId, CourseSchedule::getStudentName,
+                        CourseSchedule::getMondayClassHour, CourseSchedule::getTuesdayClassHour, CourseSchedule::getWednesdayClassHour, CourseSchedule::getThursdayClassHour, CourseSchedule::getFridayClassHour,
+                        CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
+                )
+                .containsExactly(
+                        "student_010", "teacher_001", "Jack Kang",
+                        1, 4, 3, 2, 5,
+                        LocalDate.now().getYear(), LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear())
+                );
+    }
+
+    @Test
+    void modifyClassTable() {
+//        courseService.modifyClassTable();
+    }
+
+    @Test
+    void changeStudentName() {
+//        rabbitTemplate.convertAndSend("student-change-queue", "student-change");
+    }
 }
