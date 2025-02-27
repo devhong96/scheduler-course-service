@@ -137,11 +137,8 @@ public class CourseServiceImpl implements CourseService {
     private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
 
         List<StudentCourseResponse> studentCourseList = courseRepository
-                .getAllStudentsWeeklyCoursesForComparison(localDate.getYear(), localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear()));
-
-        for (StudentCourseResponse studentCourseResponse : studentCourseList) {
-            System.out.println(studentCourseResponse.toString());
-        }
+                .getAllStudentsWeeklyCoursesForComparison(
+                        localDate.getYear(), localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear()));
 
         for (StudentCourseResponse studentCourseResponse : studentCourseList) {
 

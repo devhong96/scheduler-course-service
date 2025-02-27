@@ -7,13 +7,11 @@ import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import com.scheduler.courseservice.testSet.messaging.ChangeStudentNameRequest;
-import com.scheduler.courseservice.testSet.messaging.TestRabbitConsumer;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.mockito.Spy;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
@@ -31,7 +29,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
-@Import(TestRabbitConsumer.class)
 class CourseServiceTest {
 
     @Autowired
@@ -44,7 +41,7 @@ class CourseServiceTest {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private TestRabbitConsumer testRabbitConsumer;
+    private CourseJpaRepository courseJpaRepository;
 
     @Spy
     private static WireMockServer wireMockServer;
@@ -52,8 +49,6 @@ class CourseServiceTest {
     final static String token = "Bearer test-token";
     final static int mockYear = 2025;
     final static int mockWeek = 10;
-    @Autowired
-    private CourseJpaRepository courseJpaRepository;
 
     @BeforeAll
     static void startWireMockServer() {
@@ -218,15 +213,19 @@ class CourseServiceTest {
     @DisplayName("레빗 엠큐-학생 이름 변경")
     void changeStudentName() throws InterruptedException {
         ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();
-        changeStudentNameRequest.setStudentId("student_010");
-        changeStudentNameRequest.setStudentName("Jack Kang");
+        changeStudentNameRequest.setStudentId("student_001");
+        changeStudentNameRequest.setStudentName("Click Kim");
 
         rabbitTemplate.convertAndSend("student.exchange", "student.name.update", changeStudentNameRequest);
 
-        ChangeStudentNameRequest received = testRabbitConsumer.getReceivedMessage();
+        Thread.sleep(1000);
 
-        Assertions.assertThat(received)
+        CourseSchedule student010 = courseJpaRepository
+                .findCourseScheduleByStudentId("student_001")
+                .orElseThrow(NoSuchElementException::new);
+
+        Assertions.assertThat(student010)
                 .extracting("studentName", "studentId")
-                .containsExactly("Jack Kang", "student_010");
+                .containsExactly("Click Kim", "student_001");
     }
 }

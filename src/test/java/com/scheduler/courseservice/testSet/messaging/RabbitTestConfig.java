@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 @TestConfiguration
-public class RabbitConfig {
+public class RabbitTestConfig {
 
     public static final String EXCHANGE_NAME = "student.exchange";
     public static final String ROUTING_KEY = "student.name.update";

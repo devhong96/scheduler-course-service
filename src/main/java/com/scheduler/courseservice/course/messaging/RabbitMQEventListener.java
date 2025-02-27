@@ -5,19 +5,20 @@ import com.scheduler.courseservice.course.application.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStudentName;
 import static org.springframework.amqp.support.AmqpHeaders.DELIVERY_TAG;
 
-//@Service
+@Component
 @RequiredArgsConstructor
 public class RabbitMQEventListener {
 
     private final CourseService courseService;
 
-    @RabbitListener(queues = "student.queue", ackMode = "MANUAL")
+    @RabbitListener(queues = "student.name.update.queue", ackMode = "MANUAL")
     public void receiveMessage(
             ChangeStudentName changeStudentName, Channel channel,
             @Header(DELIVERY_TAG) long tag
