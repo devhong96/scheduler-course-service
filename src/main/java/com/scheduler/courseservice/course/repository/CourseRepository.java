@@ -3,20 +3,20 @@ package com.scheduler.courseservice.course.repository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.scheduler.courseservice.course.domain.QCourseSchedule.courseSchedule;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static org.springframework.data.support.PageableExecutionUtils.getPage;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,13 +24,12 @@ public class CourseRepository {
 
     private final JPAQueryFactory queryFactory;
 
-//    @Cacheable(
-//            cacheNames = "findAllStudentsCourses",
-//            key = "'studentsCourses:page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize",
-//            cacheManager = "courseCacheManager"
-//    )
-    @Lock(LockModeType.OPTIMISTIC)
-    public Map<String, Object> findAllStudentsCoursesCache(Pageable pageable) {
+    @Cacheable(
+            cacheNames = "findAllStudentsCourses",
+            key = "'studentsCourses:page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize",
+            cacheManager = "courseCacheManager"
+    )
+    public Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable) {
         List<StudentCourseResponse> contents = queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.studentId,
@@ -48,16 +47,11 @@ public class CourseRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long totalCount = queryFactory
+        JPAQuery<Long> totalCount = queryFactory
                 .select(courseSchedule.count())
-                .from(courseSchedule)
-                .fetchOne();
+                .from(courseSchedule);
 
-        // Map으로 변환하여 캐싱
-        Map<String, Object> cacheData = new HashMap<>();
-        cacheData.put("content", contents);
-        cacheData.put("totalCount", totalCount != null ? totalCount : 0);
-        return cacheData;
+        return getPage(contents, pageable, totalCount::fetchOne);
     }
 
     public List<StudentCourseResponse> getTeacherWeeklyCoursesForComparison(
@@ -164,7 +158,6 @@ public class CourseRepository {
     private BooleanBuilder weekOfYearEq(int weekNumber) {
         return nullSafeBooleanBuilder(() -> courseSchedule.weekOfYear.eq(weekNumber));
     }
-
 
     private BooleanBuilder teacherIdEq(String teacherId) {
         return nullSafeBooleanBuilder(() -> courseSchedule.teacherId.eq(teacherId));

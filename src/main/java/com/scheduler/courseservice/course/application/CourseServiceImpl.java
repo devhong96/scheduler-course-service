@@ -5,22 +5,25 @@ import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.course.repository.CourseRepository;
 import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStudentName;
 
@@ -28,8 +31,6 @@ import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStu
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
-
-//    private final DateProvider dateProvider;
 
     private final MemberServiceClient memberServiceClient;
     private final CourseRepository courseRepository;
@@ -42,41 +43,42 @@ public class CourseServiceImpl implements CourseService {
     public Page<StudentCourseResponse> findAllStudentsCourses(
             Pageable pageable
     ) {
-        Map<String, Object> cachedData = courseRepository.findAllStudentsCoursesCache(pageable);
-
-        List<StudentCourseResponse> contents = (List<StudentCourseResponse>) cachedData.get("content");
-        Long totalCount = (Long) cachedData.get("totalCount");
-
-        return new PageImpl<>(contents, pageable, totalCount);
+        return courseRepository.findAllStudentsCourses(pageable);
     }
 
     @Override
     @Transactional
+    @CircuitBreaker(name = "teacherService", fallbackMethod = "fallbackFindTeachersClasses")
     public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
 
-        TeacherInfo teacherInfo = memberServiceClient.findTeachersClasses(token);
+        String teacherId = memberServiceClient.findTeachersClasses(token).getTeacherId();
 
-        String teacherId = teacherInfo.getTeacherId();
         int finalYear = (year != null) ? year : localDate.getYear();
         int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
 
         List<StudentCourseResponse> studentClassByTeacherName = courseRepository
                 .getStudentClassByTeacherId(teacherId, finalYear, finalWeekOfYear);
 
-        CourseList classList = CourseList.getInstance();
+        CourseList classList = new CourseList();
 
-        for (StudentCourseResponse studentCourseResponse : studentClassByTeacherName) {
-            classList.getMondayClassList().add(studentCourseResponse.getMondayClassHour());
-            classList.getTuesdayClassList().add(studentCourseResponse.getTuesdayClassHour());
-            classList.getWednesdayClassList().add(studentCourseResponse.getWednesdayClassHour());
-            classList.getThursdayClassList().add(studentCourseResponse.getThursdayClassHour());
-            classList.getFridayClassList().add(studentCourseResponse.getFridayClassHour());
-        }
+        studentClassByTeacherName.forEach(course -> {
+            classList.addClass(MONDAY, course.getMondayClassHour());
+            classList.addClass(TUESDAY, course.getTuesdayClassHour());
+            classList.addClass(WEDNESDAY, course.getWednesdayClassHour());
+            classList.addClass(THURSDAY, course.getThursdayClassHour());
+            classList.addClass(FRIDAY, course.getFridayClassHour());
+        });
 
         return classList;
     }
 
+    protected CourseList fallbackFindTeachersClasses(String token, Integer year, Integer weekOfYear, Throwable e) {
+        log.warn("Fallback activated for findTeachersClasses. Reason: {}", e.getMessage());
+        return new CourseList();
+    }
+
     @Override
+    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackFindStudentClasses")
     public StudentCourseResponse findStudentClasses(
             String token, Integer year, Integer weekOfYear
     ) {
@@ -89,15 +91,23 @@ public class CourseServiceImpl implements CourseService {
         return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
     }
 
+    protected StudentCourseResponse fallbackFindStudentClasses(
+            String token, Integer year, Integer weekOfYear, Throwable e
+    ) {
+        log.warn("Fallback activated for findStudentClasses. Reason: {}", e.getMessage());
+
+        return new StudentCourseResponse();
+    }
+
     @Override
     @Transactional
+    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackSaveClassTable")
     public void saveClassTable(
             String token, UpsertCourseRequest upsertCourseRequest
     ) {
         duplicateClassValidator(upsertCourseRequest, null);
 
-        StudentInfo studentInfo = memberServiceClient
-                .findStudentInfoByToken(token);
+        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
         CourseSchedule courseSchedule = CourseSchedule
                 .create(upsertCourseRequest, studentInfo.getTeacherId(), studentInfo);
@@ -105,12 +115,20 @@ public class CourseServiceImpl implements CourseService {
         courseJpaRepository.save(courseSchedule);
     }
 
+    protected void fallbackSaveClassTable(
+            String token, UpsertCourseRequest upsertCourseRequest, Throwable e
+    ) {
+        log.warn("Fallback activated for saveClassTable. Reason: {}", e.getMessage());
+
+        throw new RuntimeException("수업 정보를 저장할 수 없습니다. 다시 시도해 주세요.");
+    }
+
     @Override
     @Transactional
+    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackModifyClassTable")
     public void modifyClassTable(String token, UpsertCourseRequest upsertCourseRequest) {
 
-        StudentInfo studentInfo = memberServiceClient
-                .findStudentInfoByToken(token);
+        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
         CourseSchedule existingCourse = courseJpaRepository
                 .findCourseScheduleByStudentId((studentInfo.getStudentId()))
@@ -119,6 +137,14 @@ public class CourseServiceImpl implements CourseService {
         duplicateClassValidator(upsertCourseRequest, existingCourse);
 
         existingCourse.updateSchedule(upsertCourseRequest);
+    }
+
+    protected void fallbackModifyClassTable(
+            String token, UpsertCourseRequest upsertCourseRequest, Throwable e
+    ) {
+        log.warn("Fallback activated for modifyClassTable. Reason: {}", e.getMessage());
+
+        throw new RuntimeException("수업 정보를 수정할 수 없습니다. 다시 시도해 주세요.");
     }
 
     @Override

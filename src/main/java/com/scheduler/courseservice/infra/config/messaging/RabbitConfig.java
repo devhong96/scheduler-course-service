@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.infra.config.rabbitmq;
+package com.scheduler.courseservice.infra.config.messaging;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
