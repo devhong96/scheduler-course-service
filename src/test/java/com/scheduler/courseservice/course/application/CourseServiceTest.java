@@ -24,6 +24,7 @@ import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.Stu
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.FRIDAY;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -48,7 +49,7 @@ class CourseServiceTest {
 
     final static String token = "Bearer test-token";
     final static int mockYear = 2025;
-    final static int mockWeek = 10;
+    final static int mockWeek = 9;
 
     @BeforeAll
     static void startWireMockServer() {
@@ -87,8 +88,8 @@ class CourseServiceTest {
         CourseList teachersClasses = courseService
                 .findTeachersClasses(token, mockYear, mockWeek);
 
-        int size = teachersClasses.getFridayClassList().size();
-        assertThat(2).isEqualTo(size);
+        int size = teachersClasses.getClassList(FRIDAY).size();
+        assertThat(size).isEqualTo(1);
     }
 
     @Test
@@ -96,7 +97,7 @@ class CourseServiceTest {
     void findStudentClasses() throws JsonProcessingException {
 
         final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "student_010", "Jack Kang"));
+                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
 
         stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader("Authorization", matching(".*"))
@@ -114,9 +115,9 @@ class CourseServiceTest {
                         "mondayClassHour", "tuesdayClassHour", "wednesdayClassHour", "thursdayClassHour", "fridayClassHour",
                         "courseYear", "weekOfYear")
                 .containsExactly(
-                        "student_010", "Jack Kang",
-                        2, 3, 2, 1, 3,
-                        2025, 10
+                        "student_009", "Irene Seo",
+                        3, 2, 1, 4, 2,
+                        2025, 9
                 );
 
     }
@@ -126,7 +127,7 @@ class CourseServiceTest {
     void saveClassTable() throws JsonProcessingException {
 
         final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "student_010", "Jack Kang"));
+                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
 
         stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader("Authorization", matching(".*"))
@@ -146,7 +147,7 @@ class CourseServiceTest {
         courseService.saveClassTable(token, upsertCourseRequest);
 
         CourseSchedule student = courseJpaRepository
-                .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear("student_010",
+                .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear("student_009",
                         LocalDate.now().getYear(),
                         LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear()))
                 .orElseThrow(NoSuchElementException::new);
@@ -158,7 +159,7 @@ class CourseServiceTest {
                         CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
                 )
                 .containsExactly(
-                        "student_010", "teacher_001", "Jack Kang",
+                        "student_009", "teacher_001", "Irene Seo",
                         1, 4, 3, 2, 5,
                         LocalDate.now().getYear(), LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear())
                 );
@@ -169,7 +170,7 @@ class CourseServiceTest {
     void modifyClassTable() throws JsonProcessingException {
 
         final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "student_010", "Jack Kang"));
+                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
 
         stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader("Authorization", matching(".*"))
@@ -190,9 +191,9 @@ class CourseServiceTest {
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
-                        "student_010",
+                        "student_009",
                         2025,
-                        10
+                        9
                 )
                 .orElseThrow(NoSuchElementException::new);
 
@@ -203,9 +204,9 @@ class CourseServiceTest {
                         CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
                 )
                 .containsExactly(
-                        "student_010", "teacher_001", "Jack Kang",
+                        "student_009", "teacher_001", "Irene Seo",
                         0, 0, 0, 0, 0,
-                        2025, 10
+                        2025, 9
                 );
     }
 

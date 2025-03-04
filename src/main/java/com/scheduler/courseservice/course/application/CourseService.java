@@ -12,7 +12,7 @@ import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStu
 
 public interface CourseService {
 
-      Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable);
+      Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable, String keyword);
 
       CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear);
 

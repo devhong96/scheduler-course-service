@@ -18,6 +18,10 @@ public class CourseInfoResponse {
 
         private String studentName;
 
+        private String teacherId;
+
+        private String teacherName;
+
         private Integer mondayClassHour;
 
         private Integer tuesdayClassHour;

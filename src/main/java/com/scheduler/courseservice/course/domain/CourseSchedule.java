@@ -28,10 +28,13 @@ public class CourseSchedule extends BaseEntity {
     private String studentId;
 
     @Column(nullable = false)
+    private String studentName;
+
+    @Column(nullable = false)
     private String teacherId;
 
     @Column(nullable = false)
-    private String studentName;
+    private String teacherName;
 
     @Column(nullable = false)
     private Integer mondayClassHour;
@@ -62,9 +65,10 @@ public class CourseSchedule extends BaseEntity {
             UpsertCourseRequest request, String teacherId, StudentInfo studentInfo
     ) {
         CourseSchedule courseSchedule = new CourseSchedule();
-        courseSchedule.teacherId = teacherId;
         courseSchedule.studentId = studentInfo.getStudentId();
         courseSchedule.studentName = studentInfo.getStudentName();
+        courseSchedule.teacherId = teacherId;
+        courseSchedule.teacherName = studentInfo.getTeacherId();
         courseSchedule.mondayClassHour = request.getMondayClassHour();
         courseSchedule.tuesdayClassHour = request.getTuesdayClassHour();
         courseSchedule.wednesdayClassHour = request.getWednesdayClassHour();

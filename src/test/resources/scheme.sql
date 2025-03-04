@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS teacher (
 CREATE TABLE IF NOT EXISTS course_schedule (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     teacher_id VARCHAR(50) NOT NULL,
+    teacher_name VARCHAR(50),
     student_id VARCHAR(50) NOT NULL,
-    student_name VARCHAR(50) NOT NULL,
+    student_name VARCHAR(50),
     course_year INT NOT NULL,
     week_of_year INT NOT NULL CHECK (week_of_year BETWEEN 1 AND 52),
     monday_class_hour INT CHECK (monday_class_hour BETWEEN 0 AND 10),

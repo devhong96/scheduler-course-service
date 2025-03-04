@@ -41,9 +41,9 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public Page<StudentCourseResponse> findAllStudentsCourses(
-            Pageable pageable
+            Pageable pageable, String keyword
     ) {
-        return courseRepository.findAllStudentsCourses(pageable);
+        return courseRepository.findAllStudentsCourses(pageable, keyword);
     }
 
     @Override

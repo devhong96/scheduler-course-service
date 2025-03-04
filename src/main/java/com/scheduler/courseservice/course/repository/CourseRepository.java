@@ -29,11 +29,13 @@ public class CourseRepository {
             key = "'studentsCourses:page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize",
             cacheManager = "courseCacheManager"
     )
-    public Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable) {
+    public Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable, String keyword) {
         List<StudentCourseResponse> contents = queryFactory
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.studentId,
                         courseSchedule.studentName,
+                        courseSchedule.teacherId,
+                        courseSchedule.teacherName,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,
@@ -43,6 +45,12 @@ public class CourseRepository {
                         courseSchedule.weekOfYear
                 ))
                 .from(courseSchedule)
+                .where(
+                        studentNameContains(keyword)
+                                .or(studentIdEq(keyword))
+                                .or(teacherIdEq(keyword))
+                                .or(teacherNameContains(keyword))
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -61,6 +69,8 @@ public class CourseRepository {
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.studentId,
                         courseSchedule.studentName,
+                        courseSchedule.teacherId,
+                        courseSchedule.teacherName,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,
@@ -85,6 +95,8 @@ public class CourseRepository {
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.studentId,
                         courseSchedule.studentName,
+                        courseSchedule.teacherId,
+                        courseSchedule.teacherName,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,
@@ -109,6 +121,8 @@ public class CourseRepository {
                         Projections.fields(StudentCourseResponse.class,
                                 courseSchedule.studentId,
                                 courseSchedule.studentName,
+                                courseSchedule.teacherId,
+                                courseSchedule.teacherName,
                                 courseSchedule.mondayClassHour,
                                 courseSchedule.tuesdayClassHour,
                                 courseSchedule.wednesdayClassHour,
@@ -119,9 +133,9 @@ public class CourseRepository {
                         ))
                 .from(courseSchedule)
                 .where(
-                        studentIdEq(studentId),
                         yearEq(year),
-                        weekOfYearEq(weekOfYear)
+                        weekOfYearEq(weekOfYear),
+                        studentIdEq(studentId)
                 )
                 .fetchOne();
 
@@ -135,6 +149,8 @@ public class CourseRepository {
                 .select(Projections.fields(StudentCourseResponse.class,
                         courseSchedule.studentId,
                         courseSchedule.studentName,
+                        courseSchedule.teacherId,
+                        courseSchedule.teacherName,
                         courseSchedule.mondayClassHour,
                         courseSchedule.tuesdayClassHour,
                         courseSchedule.wednesdayClassHour,
@@ -144,9 +160,10 @@ public class CourseRepository {
                         courseSchedule.weekOfYear
                 ))
                 .from(courseSchedule)
-                .where(teacherIdEq(teacherId),
+                .where(
                         yearEq(year),
-                        weekOfYearEq(weekOfYear)
+                        weekOfYearEq(weekOfYear),
+                        teacherIdEq(teacherId)
                 )
                 .fetch();
     }
@@ -163,8 +180,16 @@ public class CourseRepository {
         return nullSafeBooleanBuilder(() -> courseSchedule.teacherId.eq(teacherId));
     }
 
+    private BooleanBuilder teacherNameContains(String teacherName) {
+        return nullSafeBooleanBuilder(() -> courseSchedule.teacherName.contains(teacherName));
+    }
+
     private BooleanBuilder studentIdEq(String studentId) {
         return nullSafeBooleanBuilder(() -> courseSchedule.studentId.eq(studentId));
+    }
+
+    private BooleanBuilder studentNameContains(String studentName) {
+        return nullSafeBooleanBuilder(() -> courseSchedule.studentName.contains(studentName));
     }
 
     private BooleanBuilder nullSafeBooleanBuilder(Supplier<BooleanExpression> supplier) {

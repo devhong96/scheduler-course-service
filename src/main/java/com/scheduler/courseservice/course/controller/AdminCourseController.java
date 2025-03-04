@@ -4,7 +4,6 @@ import com.scheduler.courseservice.course.application.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,9 +25,9 @@ public class AdminCourseController {
     @GetMapping("class")
     public ResponseEntity<Page<StudentCourseResponse>> managePage(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword
     ) {
-        PageRequest pageRequest = of(page - 1, size);
-        return new ResponseEntity<>(courseService.findAllStudentsCourses(pageRequest), OK);
+        return new ResponseEntity<>(courseService.findAllStudentsCourses(of(page - 1, size), keyword), OK);
     }
 }
