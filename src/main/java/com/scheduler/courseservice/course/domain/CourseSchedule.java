@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -61,14 +61,12 @@ public class CourseSchedule extends BaseEntity {
     private Long version = 0L;
 
 
-    public static CourseSchedule create(
-            UpsertCourseRequest request, String teacherId, StudentInfo studentInfo
-    ) {
+    public static CourseSchedule create(CourseRequestMessage request) {
         CourseSchedule courseSchedule = new CourseSchedule();
-        courseSchedule.studentId = studentInfo.getStudentId();
-        courseSchedule.studentName = studentInfo.getStudentName();
-        courseSchedule.teacherId = teacherId;
-        courseSchedule.teacherName = studentInfo.getTeacherId();
+        courseSchedule.studentId = request.getStudentId();
+        courseSchedule.studentName = request.getStudentName();
+        courseSchedule.teacherId = request.getTeacherId();
+        courseSchedule.teacherName = request.getTeacherName();
         courseSchedule.mondayClassHour = request.getMondayClassHour();
         courseSchedule.tuesdayClassHour = request.getTuesdayClassHour();
         courseSchedule.wednesdayClassHour = request.getWednesdayClassHour();

@@ -1,6 +1,6 @@
 package com.scheduler.courseservice.course.controller;
 
-import com.scheduler.courseservice.course.application.CourseService;
+import com.scheduler.courseservice.course.application.CourseQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor
 public class AdminCourseController {
 
-    private final CourseService courseService;
+    private final CourseQueryService courseQueryService;
 
     @Operation(description = "관리자 버전 조회")
     @GetMapping("class")
@@ -28,6 +28,6 @@ public class AdminCourseController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
     ) {
-        return new ResponseEntity<>(courseService.findAllStudentsCourses(of(page - 1, size), keyword), OK);
+        return new ResponseEntity<>(courseQueryService.findAllStudentsCourses(of(page - 1, size), keyword), OK);
     }
 }

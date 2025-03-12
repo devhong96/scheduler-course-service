@@ -25,8 +25,8 @@ public class RabbitMQEventListener {
     ) throws IOException {
 
         try {
-            channel.basicAck(tag, false);
             courseService.changeStudentName(changeStudentName);
+            channel.basicAck(tag, false);
         } catch (IOException e) {
             channel.basicNack(tag, false, true);
             throw new RuntimeException(e);

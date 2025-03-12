@@ -1,5 +1,6 @@
 package com.scheduler.courseservice.course.controller;
 
+import com.scheduler.courseservice.course.application.CourseQueryService;
 import com.scheduler.courseservice.course.application.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import static org.springframework.http.HttpStatus.OK;
 public class StudentCourseController {
 
     private final CourseService courseService;
+    private final CourseQueryService courseQueryService;
 
     @Operation(description = "학생 본인 금주 수업 조회")
     @GetMapping("class")
@@ -25,7 +27,7 @@ public class StudentCourseController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer weekOfYear
     ) {
-        return new ResponseEntity<>(courseService.findStudentClasses(token, year, weekOfYear), OK);
+        return new ResponseEntity<>(courseQueryService.findStudentClasses(token, year, weekOfYear), OK);
     }
 
     @Operation(description = "수업 제출")
@@ -34,7 +36,7 @@ public class StudentCourseController {
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
     ) {
-        courseService.saveClassTable(token, upsertCourseRequest);
+        courseService.applyCourse(token, upsertCourseRequest);
         return new ResponseEntity<>(OK);
     }
 
@@ -44,7 +46,7 @@ public class StudentCourseController {
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
     ) {
-        courseService.modifyClassTable(token, upsertCourseRequest);
+        courseService.modifyCourse(token, upsertCourseRequest);
         return new ResponseEntity<>(OK);
     }
 }

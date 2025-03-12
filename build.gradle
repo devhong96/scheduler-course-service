@@ -50,13 +50,16 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-config:4.2.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.2.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp:4.2.0'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.apache.kafka:connect-api:3.9.0'
+
+
+    implementation 'io.github.openfeign:feign-okhttp:13.5'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
+    implementation 'org.redisson:redisson-spring-boot-starter:3.45.0'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas:3.3.5'
 
     // SWAGGER
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
@@ -91,11 +94,16 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
 
-    testImplementation 'org.testcontainers:rabbitmq:1.20.5'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'io.github.embeddedkafka:embedded-kafka_3:3.9.0'
+    testImplementation 'org.testcontainers:kafka:1.20.6'
+
+    testImplementation 'org.testcontainers:rabbitmq:1.20.6'
 
     testImplementation 'com.h2database:h2'
     implementation 'org.wiremock.integrations:wiremock-spring-boot:3.6.0'
     testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.2.0'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
     implementation 'org.glassfish.jersey.core:jersey-common:3.1.1'

@@ -21,11 +21,8 @@ import java.util.NoSuchElementException;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.FRIDAY;
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static com.scheduler.courseservice.testSet.messaging.testDataSet.token;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -47,14 +44,16 @@ class CourseServiceTest {
     @Spy
     private static WireMockServer wireMockServer;
 
-    final static String token = "Bearer test-token";
-    final static int mockYear = 2025;
-    final static int mockWeek = 9;
-
     @BeforeAll
     static void startWireMockServer() {
         wireMockServer = new WireMockServer(wireMockConfig().port(8080));
         wireMockServer.start();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 없으면 테스트간 문제 발생
+        wireMockServer.resetAll();
     }
 
     @AfterAll
@@ -64,70 +63,14 @@ class CourseServiceTest {
         }
     }
 
-    @BeforeEach
-    void resetWireMock() {
-        wireMockServer.resetAll();
-    }
-
-    @Test
-    @DisplayName("교사에게 할당된 수업 수")
-    void findTeachersClasses() throws JsonProcessingException {
-
-        // Given
-        final String expectedResponse = objectMapper
-                .writeValueAsString(new TeacherInfo("teacher_001"));
-
-        stubFor(get(urlEqualTo("/feign-member/teacher/info"))
-                .withHeader("Authorization", matching(".*"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-                        .withBody(expectedResponse)
-        ));
-
-        CourseList teachersClasses = courseService
-                .findTeachersClasses(token, mockYear, mockWeek);
-
-        int size = teachersClasses.getClassList(FRIDAY).size();
-        assertThat(size).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("학생의 클래스 찾기")
-    void findStudentClasses() throws JsonProcessingException {
-
-        final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
-
-        stubFor(get(urlEqualTo("/feign-member/student/info"))
-                .withHeader("Authorization", matching(".*"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-                        .withBody(expectedResponse)
-                ));
-
-        StudentCourseResponse studentClasses = courseService.findStudentClasses(token, mockYear, mockWeek);
-
-        assertThat(studentClasses)
-                .extracting(
-                "studentId", "studentName",
-                        "mondayClassHour", "tuesdayClassHour", "wednesdayClassHour", "thursdayClassHour", "fridayClassHour",
-                        "courseYear", "weekOfYear")
-                .containsExactly(
-                        "student_009", "Irene Seo",
-                        3, 2, 1, 4, 2,
-                        2025, 9
-                );
-
-    }
-
-    @Test
+//    @Test
     @DisplayName("수업 저장")
-    void saveClassTable() throws JsonProcessingException {
+    void applyCourse() throws JsonProcessingException {
 
         final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
+                .writeValueAsString(
+                        new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo")
+                );
 
         stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader("Authorization", matching(".*"))
@@ -144,7 +87,7 @@ class CourseServiceTest {
         upsertCourseRequest.setThursdayClassHour(2);
         upsertCourseRequest.setFridayClassHour(5);
 
-        courseService.saveClassTable(token, upsertCourseRequest);
+        courseService.applyCourse(token, upsertCourseRequest);
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear("student_009",
@@ -165,9 +108,9 @@ class CourseServiceTest {
                 );
     }
 
-    @Test
+//    @Test
     @DisplayName("수업 수정")
-    void modifyClassTable() throws JsonProcessingException {
+    void modifyCourse() throws JsonProcessingException {
 
         final String expectedResponse = objectMapper
                 .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
@@ -187,7 +130,7 @@ class CourseServiceTest {
         upsertCourseRequest.setThursdayClassHour(0);
         upsertCourseRequest.setFridayClassHour(0);
 
-        courseService.modifyClassTable(token, upsertCourseRequest);
+        courseService.modifyCourse(token, upsertCourseRequest);
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(

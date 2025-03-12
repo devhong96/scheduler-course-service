@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.infra.config;
+package com.scheduler.courseservice.infra.config.setting;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
