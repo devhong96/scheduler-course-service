@@ -14,7 +14,7 @@ public class CourseFeignErrorDecoder implements ErrorDecoder {
 
         return switch (response.status()) {
             case 400 -> new IllegalArgumentException();
-            case 403 -> new AuthorityException();
+            case 403 -> new AuthorityException(response.reason());
             case 404 -> new NotFoundException();
             case 405 -> new IllegalAccessException();
             default -> new Exception(response.reason());

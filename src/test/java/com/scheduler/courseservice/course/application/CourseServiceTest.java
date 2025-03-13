@@ -34,6 +34,8 @@ import static com.scheduler.courseservice.testSet.messaging.testDataSet.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
@@ -106,11 +108,11 @@ class CourseServiceTest {
         final String expectedResponse = objectMapper
                 .writeValueAsString(studentInfo);
 
-        stubFor(get(urlEqualTo("/feign-member/student/info"))
-                .withHeader("Authorization", matching(".*"))
+        stubFor(post(urlEqualTo("/feign-member/student/info"))
+                .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withBody(expectedResponse)
                 ));
 

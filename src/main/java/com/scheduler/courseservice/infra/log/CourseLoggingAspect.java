@@ -18,7 +18,7 @@ import static com.scheduler.courseservice.infra.log.IPLog.getIpAddress;
 public class CourseLoggingAspect {
 
     @Around("execution(* com.scheduler.courseservice.*.*.*Controller.*(..))")
-    public Object bookController(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object courseController(ProceedingJoinPoint joinPoint) throws Throwable {
         return getObject(joinPoint);
     }
 

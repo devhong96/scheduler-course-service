@@ -18,6 +18,8 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseLi
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static com.scheduler.courseservice.testSet.messaging.testDataSet.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
@@ -56,11 +58,11 @@ class CourseQueryServiceTest {
                         new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo")
                 );
 
-        stubFor(get(urlEqualTo("/feign-member/student/info"))
-                .withHeader("Authorization", matching(".*"))
+        stubFor(post(urlEqualTo("/feign-member/student/info"))
+                .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withBody(expectedResponse)
                 ));
 
@@ -90,11 +92,11 @@ class CourseQueryServiceTest {
         final String expectedResponse = objectMapper
                 .writeValueAsString(new TeacherInfo("teacher_001"));
 
-        stubFor(get(urlEqualTo("/feign-member/teacher/info"))
-                .withHeader("Authorization", matching(".*"))
+        stubFor(post(urlEqualTo("/feign-member/teacher/info"))
+                .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withBody(expectedResponse)
                 ));
 

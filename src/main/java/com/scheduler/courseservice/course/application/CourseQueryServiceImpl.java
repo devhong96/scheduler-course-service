@@ -38,6 +38,31 @@ public class CourseQueryServiceImpl implements CourseQueryService {
     }
 
     @Override
+    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackFindStudentClasses")
+    public StudentCourseResponse findStudentClasses(
+            String token, Integer year, Integer weekOfYear
+    ) {
+        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
+
+        if (studentInfo == null) {
+            throw new IllegalStateException("StudentInfo is null");
+        }
+        String studentId = studentInfo.getStudentId();
+        int finalYear = (year != null) ? year : localDate.getYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+
+        return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
+    }
+
+    protected StudentCourseResponse fallbackFindStudentClasses(
+            String token, Integer year, Integer weekOfYear, Throwable e
+    ) {
+        log.warn("Reason: ", e);
+
+        return new StudentCourseResponse();
+    }
+
+    @Override
     @Transactional
     @CircuitBreaker(name = "teacherService", fallbackMethod = "fallbackFindTeachersClasses")
     public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
@@ -66,27 +91,5 @@ public class CourseQueryServiceImpl implements CourseQueryService {
     protected CourseList fallbackFindTeachersClasses(String token, Integer year, Integer weekOfYear, Throwable e) {
         log.warn("Fallback activated for findTeachersClasses. Reason: {}", e.getMessage());
         return new CourseList();
-    }
-
-    @Override
-    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackFindStudentClasses")
-    public StudentCourseResponse findStudentClasses(
-            String token, Integer year, Integer weekOfYear
-    ) {
-        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
-
-        String studentId = studentInfo.getStudentId();
-        int finalYear = (year != null) ? year : localDate.getYear();
-        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
-
-        return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
-    }
-
-    protected StudentCourseResponse fallbackFindStudentClasses(
-            String token, Integer year, Integer weekOfYear, Throwable e
-    ) {
-        log.warn("Fallback activated for findStudentClasses. Reason: {}", e.getMessage());
-
-        return new StudentCourseResponse();
     }
 }
