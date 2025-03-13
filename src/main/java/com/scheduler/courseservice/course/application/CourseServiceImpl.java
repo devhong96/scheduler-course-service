@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
-import com.scheduler.courseservice.course.repository.CourseRepository;
-import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -24,7 +23,6 @@ import java.util.*;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStudentName;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -37,7 +35,6 @@ public class CourseServiceImpl implements CourseService {
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    private final CourseRepository courseRepository;
     private final CourseJpaRepository courseJpaRepository;
 
     private final ObjectMapper objectMapper;
@@ -47,97 +44,25 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackSaveClassTable")
-    public void applyCourse(
-            String token, UpsertCourseRequest upsertCourseRequest
-    ) {
-
-        duplicateClassValidator(upsertCourseRequest, null);
+    public void applyCourse(String token, UpsertCourseRequest upsertCourseRequest) {
 
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
-        String key = "courseLock:" + studentInfo.getStudentId();
-        RLock lock = redissonClient.getLock(key);
-
         try {
-            boolean available = lock.tryLock(10, 1, SECONDS);
+            String value = objectMapper.writeValueAsString(
+                    new CourseRequestMessage(studentInfo, upsertCourseRequest));
 
-            if (available) {
-                try {
-                    String value = objectMapper.writeValueAsString(
-                            new CourseRequestMessage(studentInfo, upsertCourseRequest));
+            kafkaTemplate.send("topic_course_schedule_logs", value);
 
-                    kafkaTemplate.send("topic_course_schedule_logs", value);
-
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                throw new RuntimeException("Timeout: Unable to acquire lock");
-            }
-        } catch (InterruptedException e) {
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override
-    @Transactional
-    @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackModifyClassTable")
-    public void modifyCourse(String token, UpsertCourseRequest upsertCourseRequest) {
-
-        StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
-
-        CourseSchedule existingCourse = courseJpaRepository
-                .findCourseScheduleByStudentId((studentInfo.getStudentId()))
-                .orElseThrow(() -> new IllegalStateException("기존 수업을 찾을 수 없습니다."));
-
-        duplicateClassValidator(upsertCourseRequest, existingCourse);
-
-        existingCourse.updateSchedule(upsertCourseRequest);
-    }
-
     protected void fallbackSaveClassTable(
-            String token, UpsertCourseRequest upsertCourseRequest, Throwable e
-    ) {
+            String token, UpsertCourseRequest upsertCourseRequest, Throwable e) {
         log.warn("Reason: {}", e.getMessage());
-
         throw new RuntimeException("수업 정보를 저장할 수 없습니다. 다시 시도해 주세요.");
-    }
-
-    private void duplicateClassValidator(UpsertCourseRequest upsertCourseRequest, CourseSchedule existingCourse) {
-
-        List<StudentCourseResponse> studentCourseList = courseRepository
-                .getAllStudentsWeeklyCoursesForComparison(
-                        localDate.getYear(), localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear()));
-
-        for (StudentCourseResponse studentCourseResponse : studentCourseList) {
-
-            if (existingCourse != null &&
-                    studentCourseResponse.getStudentId().equals(existingCourse.getStudentId())) {
-                continue;
-            }
-
-            if (isOverlapping(studentCourseResponse, upsertCourseRequest)) {
-                throw new DuplicateCourseException("수업이 중복됩니다.");
-            }
-        }
-    }
-
-    private boolean isOverlapping(StudentCourseResponse existing, UpsertCourseRequest newClass) {
-        return Objects.equals(existing.getMondayClassHour(), newClass.getMondayClassHour()) ||
-                Objects.equals(existing.getTuesdayClassHour(), newClass.getTuesdayClassHour()) ||
-                Objects.equals(existing.getWednesdayClassHour(), newClass.getWednesdayClassHour()) ||
-                Objects.equals(existing.getThursdayClassHour(), newClass.getThursdayClassHour()) ||
-                Objects.equals(existing.getFridayClassHour(), newClass.getFridayClassHour());
-    }
-
-    protected void fallbackModifyClassTable(
-            String token, UpsertCourseRequest upsertCourseRequest, Throwable e
-    ) {
-        log.warn("Fallback activated for modifyClassTable. Reason: {}", e.getMessage());
-
-        throw new RuntimeException("수업 정보를 수정할 수 없습니다. 다시 시도해 주세요.");
     }
 
     @KafkaListener(
@@ -145,25 +70,97 @@ public class CourseServiceImpl implements CourseService {
             groupId = "group-1",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void saveClassTable(List<String> messages) {
+    @Transactional
+    public void saveCourseTable(List<String> messages) {
         if (messages.isEmpty()) return;
-
         List<CourseSchedule> courseSchedules = new ArrayList<>();
 
+        int currentYear = localDate.getYear();
+        int currentWeek = localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+
+        // Redis 캐시 키 구성: 예) "courseSchedules:2025:11"
+        String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
+        RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
+
+
+        List<CourseSchedule> redisSchedules = bucket.get();
+        if (redisSchedules == null) {
+            redisSchedules = courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek);
+            bucket.set(redisSchedules);
+        }
+
         for (String message : messages) {
-
             try {
+                CourseRequestMessage courseScheduleMessage = objectMapper.readValue(message, CourseRequestMessage.class);
 
-                CourseRequestMessage courseSchedule = objectMapper.readValue(message, CourseRequestMessage.class);
+                String lockKey = "courseLock:" + courseScheduleMessage.getStudentId();
+                RLock lock = redissonClient.getLock(lockKey);
 
-                courseSchedules.add(CourseSchedule.create(courseSchedule));
+                boolean available = lock.tryLock(10, 1, SECONDS);
 
-            } catch (JsonProcessingException e) {
+                if (!available) {
+                    log.warn("Skipping processing for studentId {} as it's locked.", courseScheduleMessage.getStudentId());
+                    continue;
+                }
+
+                try {
+                    // 해당 시간대에 다른 학생의 수업이 있는지 확인
+                    checkScheduleConflict(courseScheduleMessage, redisSchedules);
+
+                    // 기존 데이터 조회 (중복 방지)
+                    Optional<CourseSchedule> existingSchedule = courseJpaRepository
+                            .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
+                                    courseScheduleMessage.getStudentId(),
+                                    currentYear,
+                                    currentWeek
+                            );
+
+                    if (existingSchedule.isPresent()) {
+                        // 기존 데이터 업데이트
+                        CourseSchedule schedule = existingSchedule.get();
+                        schedule.updateSchedule(courseScheduleMessage);
+                        courseJpaRepository.save(schedule);
+                    } else {
+                        // 새로운 데이터 추가
+                        CourseSchedule courseSchedule = CourseSchedule.create(courseScheduleMessage);
+                        courseSchedules.add(courseSchedule);
+                        redisSchedules.add(courseSchedule);
+                    }
+
+                } finally {
+                    lock.unlock();
+                }
+
+            } catch (JsonProcessingException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+        if (!courseSchedules.isEmpty()) {
+            courseJpaRepository.saveAll(courseSchedules);
+            bucket.set(redisSchedules);
+        }
+    }
 
-        courseJpaRepository.saveAll(courseSchedules);
+    private void checkScheduleConflict(CourseRequestMessage newSchedule, List<CourseSchedule> schedules) {
+        for (CourseSchedule existing : schedules) {
+            // 동일 학생의 스케줄은 체크하지 않음
+            if (existing.getStudentId().equals(newSchedule.getStudentId())) {
+                continue;
+            }
+
+            // 요일별 시간 비교 (null 안전 비교)
+            if (Objects.equals(newSchedule.getMondayClassHour(), existing.getMondayClassHour()) ||
+                    Objects.equals(newSchedule.getTuesdayClassHour(), existing.getTuesdayClassHour()) ||
+                    Objects.equals(newSchedule.getWednesdayClassHour(), existing.getWednesdayClassHour()) ||
+                    Objects.equals(newSchedule.getThursdayClassHour(), existing.getThursdayClassHour()) ||
+                    Objects.equals(newSchedule.getFridayClassHour(), existing.getFridayClassHour())) {
+
+                throw new RuntimeException(
+                        String.format("Schedule conflict detected for teacher %s with existing student %s on same time slot",
+                                newSchedule.getTeacherName(), existing.getStudentName())
+                );
+            }
+        }
     }
 
     @Override

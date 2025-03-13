@@ -15,16 +15,34 @@ INSERT INTO student (student_id, student_name, student_username) VALUES
 
 INSERT INTO course_schedule (
     teacher_id, teacher_name, student_id, student_name, course_year, week_of_year,
-    monday_class_hour, tuesday_class_hour, wednesday_class_hour,
-    thursday_class_hour, friday_class_hour, created_at, last_modified_at
+    monday_class_hour, tuesday_class_hour, wednesday_class_hour, thursday_class_hour, friday_class_hour,
+    created_at, last_modified_at
 )
 VALUES
-    ('teacher_001', 'Mr. Kim','student_001', 'Alice Kim', 2025, 1, 2, 3, 2, 4, 1, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_002', 'Bob Lee', 2025, 2, 1, 2, 2, 3, 2, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_003', 'Charlie Park', 2025, 3, 3, 1, 4, 2, 1, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_004', 'David Choi', 2025, 4, 2, 3, 1, 2, 3, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_005', 'Emma Jung', 2025, 5, 1, 2, 3, 2, 4, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_006', 'Frank Moon', 2025, 6, 3, 2, 2, 1, 3, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_007', 'Grace Han', 2025, 7, 2, 1, 3, 2, 4, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_008', 'Henry Lim', 2025, 8, 1, 3, 2, 2, 1, NOW(), NOW()),
-    ('teacher_001', 'Mr. Kim','student_009', 'Irene Seo', 2025, 9, 3, 2, 1, 4, 2, NOW(), NOW());
+    ('teacher_001', 'Mr. Kim','student_001', 'Alice Kim', YEAR(NOW()), 1,
+     2, 3, 2, 4, 1,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_002', 'Bob Lee', YEAR(NOW()), 2,
+     1, 2, 2, 3, 2,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_003', 'Charlie Park', YEAR(NOW()), 3,
+     3, 1, 4, 2, 1,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_004', 'David Choi', YEAR(NOW()), 4,
+     2, 3, 1, 2, 3,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_005', 'Emma Jung', YEAR(NOW()), 5,
+     1, 2, 3, 2, 4,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_006', 'Frank Moon', YEAR(NOW()), 6,
+     3, 2, 2, 1, 3,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_007', 'Grace Han', YEAR(NOW()), 7,
+     2, 1, 3, 2, 4,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_008', 'Henry Lim', YEAR(NOW()), 8,
+     1, 3, 2, 2, 1,
+     NOW(), NOW()),
+    ('teacher_001', 'Mr. Kim','student_009', 'Irene Seo', 2025, WEEK(CURDATE()),
+     3, 2, 1, 4, 2,
+     NOW(), NOW());

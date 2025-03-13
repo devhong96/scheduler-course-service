@@ -9,7 +9,6 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
-import java.util.List;
 import java.util.Map;
 
 @TestConfiguration
@@ -21,7 +20,6 @@ public class KafkaTestConfig {
     @Bean
     public ProducerFactory<String, String> testProducerFactory() {
         Map<String, Object> stringObjectMap = kafkaProperties.getProducer().buildProperties(null);
-        List<String> bootstrapServers = kafkaProperties.getBootstrapServers();
 
         return new DefaultKafkaProducerFactory<>(stringObjectMap);
     }

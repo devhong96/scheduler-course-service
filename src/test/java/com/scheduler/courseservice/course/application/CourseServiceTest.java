@@ -3,27 +3,37 @@ package com.scheduler.courseservice.course.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import com.scheduler.courseservice.testSet.messaging.ChangeStudentNameRequest;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
-import org.mockito.Spy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 
-import java.time.LocalDate;
-import java.time.temporal.WeekFields;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
-import static com.scheduler.courseservice.testSet.messaging.testDataSet.token;
+import static com.scheduler.courseservice.testSet.messaging.testDataSet.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @IntegrationTest
@@ -39,38 +49,62 @@ class CourseServiceTest {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Autowired
     private CourseJpaRepository courseJpaRepository;
 
-    @Spy
-    private static WireMockServer wireMockServer;
+    @Mock
+    private MemberServiceClient memberServiceClient;
 
-    @BeforeAll
-    static void startWireMockServer() {
-        wireMockServer = new WireMockServer(wireMockConfig().port(8080));
-        wireMockServer.start();
+    @Autowired
+    private WireMockServer wireMockServer;
+
+    @BeforeEach
+    void startWireMockServer() {
+        if (!wireMockServer.isRunning()) {
+            wireMockServer.start();
+        }
     }
+
 
     @AfterEach
-    void tearDown() {
-        // 없으면 테스트간 문제 발생
-        wireMockServer.resetAll();
-    }
-
-    @AfterAll
-    static void stopWireMockServer() {
+    void stopWireMockServer() {
         if (wireMockServer != null) {
             wireMockServer.stop();
         }
     }
 
-//    @Test
-    @DisplayName("수업 저장")
-    void applyCourse() throws JsonProcessingException {
 
-        final String expectedResponse = objectMapper
-                .writeValueAsString(
-                        new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo")
+    @Test
+    @DisplayName("feign 확인")
+    void feignStudentInfo() {
+
+        StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
+
+        when(memberServiceClient.findStudentInfoByToken(token)).thenReturn(studentInfo);
+
+        StudentInfo result = memberServiceClient.findStudentInfoByToken(token);
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(
+                        StudentInfo::getTeacherId, StudentInfo::getTeacherName,
+                        StudentInfo::getStudentId, StudentInfo::getStudentName
+                )
+                .containsExactly(
+                        "teacher_001", "Mr. Kim",
+                        "student_009", "Irene Seo"
                 );
+    }
+
+    @Test
+    @DisplayName("수업 전달")
+    void applyCourse() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
+
+        StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
+        final String expectedResponse = objectMapper
+                .writeValueAsString(studentInfo);
 
         stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader("Authorization", matching(".*"))
@@ -89,39 +123,29 @@ class CourseServiceTest {
 
         courseService.applyCourse(token, upsertCourseRequest);
 
-        CourseSchedule student = courseJpaRepository
-                .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear("student_009",
-                        LocalDate.now().getYear(),
-                        LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear()))
-                .orElseThrow(NoSuchElementException::new);
+        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(
+                "topic_course_schedule_logs",
+                objectMapper.writeValueAsString(new CourseRequestMessage(
+                        studentInfo,
+                        upsertCourseRequest
+                ))
+        );
 
-        assertThat(student)
-                .extracting(
-                        CourseSchedule::getStudentId, CourseSchedule::getTeacherId, CourseSchedule::getStudentName,
-                        CourseSchedule::getMondayClassHour, CourseSchedule::getTuesdayClassHour, CourseSchedule::getWednesdayClassHour, CourseSchedule::getThursdayClassHour, CourseSchedule::getFridayClassHour,
-                        CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
-                )
-                .containsExactly(
-                        "student_009", "teacher_001", "Irene Seo",
-                        1, 4, 3, 2, 5,
-                        LocalDate.now().getYear(), LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfYear())
-                );
+        SendResult<String, String> sendResult = future.get(5, SECONDS);
+
+        assertThat(sendResult).isNotNull();
+        assertThat(sendResult.getProducerRecord().value()).isNotNull();
+
     }
 
-//    @Test
+    @Test
     @DisplayName("수업 수정")
-    void modifyCourse() throws JsonProcessingException {
+    void saveCourseTable() throws JsonProcessingException {
 
-        final String expectedResponse = objectMapper
-                .writeValueAsString(new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo"));
-
-        stubFor(get(urlEqualTo("/feign-member/student/info"))
-                .withHeader("Authorization", matching(".*"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-                        .withBody(expectedResponse)
-                ));
+        StudentInfo studentInfo = new StudentInfo(
+                "teacher_001", "Mr. Kim",
+                "student_009", "Irene Seo"
+        );
 
         UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
         upsertCourseRequest.setMondayClassHour(0);
@@ -130,26 +154,34 @@ class CourseServiceTest {
         upsertCourseRequest.setThursdayClassHour(0);
         upsertCourseRequest.setFridayClassHour(0);
 
-        courseService.modifyCourse(token, upsertCourseRequest);
+        CourseRequestMessage courseRequestMessage = new CourseRequestMessage(studentInfo, upsertCourseRequest);
+
+        String string = objectMapper.writeValueAsString(courseRequestMessage);
+
+        List<String> objects = new ArrayList<>();
+
+        objects.add(string);
+
+        courseService.saveCourseTable(objects);
+
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
-                        "student_009",
-                        2025,
-                        9
-                )
+                        "student_009", mockYear, mockWeek)
                 .orElseThrow(NoSuchElementException::new);
 
         assertThat(student)
                 .extracting(
-                        CourseSchedule::getStudentId, CourseSchedule::getTeacherId, CourseSchedule::getStudentName,
+                        CourseSchedule::getTeacherId, CourseSchedule::getTeacherName,
+                        CourseSchedule::getStudentId, CourseSchedule::getStudentName,
                         CourseSchedule::getMondayClassHour, CourseSchedule::getTuesdayClassHour, CourseSchedule::getWednesdayClassHour, CourseSchedule::getThursdayClassHour, CourseSchedule::getFridayClassHour,
                         CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
                 )
                 .containsExactly(
-                        "student_009", "teacher_001", "Irene Seo",
+                        "teacher_001", "Mr. Kim",
+                        "student_009", "Irene Seo",
                         0, 0, 0, 0, 0,
-                        2025, 9
+                        mockYear, mockWeek
                 );
     }
 

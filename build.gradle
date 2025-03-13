@@ -97,12 +97,12 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'io.github.embeddedkafka:embedded-kafka_3:3.9.0'
     testImplementation 'org.testcontainers:kafka:1.20.6'
-
     testImplementation 'org.testcontainers:rabbitmq:1.20.6'
 
     testImplementation 'com.h2database:h2'
-    implementation 'org.wiremock.integrations:wiremock-spring-boot:3.6.0'
+
     testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.2.0'
+
     testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'

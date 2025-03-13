@@ -51,6 +51,9 @@ public class CourseInfoRequest {
 
         private Integer fridayClassHour;
 
+        public CourseRequestMessage() {
+        }
+
         public CourseRequestMessage(StudentInfo studentInfo, UpsertCourseRequest upsertCourseRequest) {
             this.teacherId = studentInfo.getTeacherId();
             this.teacherName = studentInfo.getTeacherName();

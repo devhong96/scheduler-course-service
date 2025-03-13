@@ -32,21 +32,11 @@ public class StudentCourseController {
 
     @Operation(description = "수업 제출")
     @PostMapping("class")
-    public ResponseEntity<Void> submitCourse(
+    public ResponseEntity<Void> applyCourse(
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
     ) {
         courseService.applyCourse(token, upsertCourseRequest);
-        return new ResponseEntity<>(OK);
-    }
-
-    @Operation(description = "수업 변경")
-    @PatchMapping("class")
-    public ResponseEntity<Void> modifyCourse(
-            @RequestHeader("Authorization") String token,
-            @Valid @RequestBody UpsertCourseRequest upsertCourseRequest
-    ) {
-        courseService.modifyCourse(token, upsertCourseRequest);
         return new ResponseEntity<>(OK);
     }
 }

@@ -1,6 +1,7 @@
 package com.scheduler.courseservice.testSet;
 
 import com.scheduler.courseservice.testSet.messaging.KafkaTestConfig;
+import com.scheduler.courseservice.testSet.messaging.TestConfig;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +23,7 @@ import java.lang.annotation.Target;
 @Transactional
 @AutoConfigureMockMvc
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
-@Import(KafkaTestConfig.class)
+@Import({KafkaTestConfig.class, TestConfig.class})
 @ActiveProfiles("test")
 public @interface IntegrationTest {
 

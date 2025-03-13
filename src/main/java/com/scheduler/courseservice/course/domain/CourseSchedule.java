@@ -10,7 +10,6 @@ import java.time.temporal.WeekFields;
 import java.util.Locale;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
-import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -76,15 +75,16 @@ public class CourseSchedule extends BaseEntity {
         LocalDate now = LocalDate.now();
         courseSchedule.courseYear = now.getYear();
         courseSchedule.weekOfYear = now.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+
         return courseSchedule;
     }
 
-    public void updateSchedule(UpsertCourseRequest upsertCourseRequest) {
-        this.mondayClassHour = upsertCourseRequest.getMondayClassHour();
-        this.tuesdayClassHour = upsertCourseRequest.getTuesdayClassHour();
-        this.wednesdayClassHour = upsertCourseRequest.getWednesdayClassHour();
-        this.thursdayClassHour = upsertCourseRequest.getThursdayClassHour();
-        this.fridayClassHour = upsertCourseRequest.getFridayClassHour();
+    public void updateSchedule(CourseRequestMessage courseRequestMessage) {
+        this.mondayClassHour = courseRequestMessage.getMondayClassHour();
+        this.tuesdayClassHour = courseRequestMessage.getTuesdayClassHour();
+        this.wednesdayClassHour = courseRequestMessage.getWednesdayClassHour();
+        this.thursdayClassHour = courseRequestMessage.getThursdayClassHour();
+        this.fridayClassHour = courseRequestMessage.getFridayClassHour();
     }
 
     public void updateStudentName(String studentName) {
