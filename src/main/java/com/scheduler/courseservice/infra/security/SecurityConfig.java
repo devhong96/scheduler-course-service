@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -60,11 +59,7 @@ public class SecurityConfig {
                 .addFilterAt(new JwtAuthFilter(jwtUtils), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers(INTERNAL_ENDPOINTS)
-                                .access(
-                                        new WebExpressionAuthorizationManager(
-                                                "hasIpAddress('127.0.0.1') or hasIpAddress('172.18.0.0/16')")
-                                )
+                                .requestMatchers(INTERNAL_ENDPOINTS).authenticated()
                                 .requestMatchers(ADMIN_ENDPOINTS).hasAuthority("ADMIN")
                                 .requestMatchers(TEACHER_ENDPOINTS).hasAuthority("TEACHER")
                                 .requestMatchers(STUDENT_ENDPOINTS).hasAuthority("STUDENT")
