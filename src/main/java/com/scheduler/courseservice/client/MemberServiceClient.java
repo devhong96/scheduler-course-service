@@ -11,7 +11,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @FeignClient(
         name = "scheduler-member-service",
-        url =  "${scheduler_member_service_url:}",
+//        url =  "${scheduler_member_service_url:}",
         configuration = MemberFeignErrorDecoder.class
 )
 public interface MemberServiceClient {
