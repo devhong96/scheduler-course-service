@@ -45,9 +45,10 @@ public class SecurityConfig {
 
 
     public static final String[] ENDPOINTS_WHITELISTS = {
-            "/feign-course/**",
-            "/course-api/**",
-            "/actuator/**",
+            "/**"
+//            "/feign-course/**",
+//            "/course-api/**",
+//            "/actuator/**",
     };
 
     @Bean
