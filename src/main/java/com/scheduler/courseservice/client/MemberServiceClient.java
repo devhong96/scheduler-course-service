@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.*;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @FeignClient(
         name = "scheduler-member-service",
@@ -19,16 +18,16 @@ public interface MemberServiceClient {
 
     @GetMapping("/teacher/info")
     TeacherInfo findTeachersClasses(
-            @RequestHeader(AUTHORIZATION) String token
+            @RequestHeader("Authorization") String token
     );
 
     @GetMapping("/student/info")
     StudentInfo findStudentInfoByToken(
-            @RequestHeader(AUTHORIZATION) String token
+            @RequestHeader("Authorization") String token
     );
 
     @PostMapping("/member/info")
     MemberInfo findMemberInfoByToken(
-            @RequestHeader(AUTHORIZATION) String token
+            @RequestHeader("Authorization") String token
     );
 }
