@@ -49,6 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         accessToken = accessToken.replace("Bearer ", "").trim();
 
         try {
+            log.info(accessToken);
             Authentication authentication = jwtUtils.getAuthentication(accessToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
@@ -56,7 +57,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             log.error("JWT 인증 실패: {}", e.getMessage(), e);
             response.setStatus(SC_UNAUTHORIZED);
             response.getWriter().write("Invalid JWT Token");
-            return;
         }
 
     }
