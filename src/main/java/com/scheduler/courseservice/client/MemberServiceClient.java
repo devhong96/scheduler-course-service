@@ -16,7 +16,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 )
 public interface MemberServiceClient {
 
-    @PostMapping("/feign-member/teacher/info")
+    @GetMapping("/feign-member/teacher/info")
     TeacherInfo findTeachersClasses(
             @RequestHeader(AUTHORIZATION) String token
     );
