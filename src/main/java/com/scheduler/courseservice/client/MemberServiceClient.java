@@ -10,8 +10,8 @@ import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.*;
 
 @FeignClient(
         name = "scheduler-member-service",
-//        url =  "${scheduler_member_service_url:}",
-        path = "/feign-member",
+        url =  "${scheduler_member_service_url:}",
+        path = "/scheduler-member-service/feign-member",
         configuration = MemberFeignErrorDecoder.class
 )
 public interface MemberServiceClient {
