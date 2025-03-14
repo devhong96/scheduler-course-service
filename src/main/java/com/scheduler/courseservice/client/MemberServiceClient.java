@@ -12,21 +12,22 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @FeignClient(
         name = "scheduler-member-service",
 //        url =  "${scheduler_member_service_url:}",
+        path = "/feign-member",
         configuration = MemberFeignErrorDecoder.class
 )
 public interface MemberServiceClient {
 
-    @GetMapping("/feign-member/teacher/info")
+    @GetMapping("/teacher/info")
     TeacherInfo findTeachersClasses(
             @RequestHeader(AUTHORIZATION) String token
     );
 
-    @GetMapping("/feign-member/student/info")
+    @GetMapping("/student/info")
     StudentInfo findStudentInfoByToken(
             @RequestHeader(AUTHORIZATION) String token
     );
 
-    @PostMapping("/feign-member/member/info")
+    @PostMapping("/member/info")
     MemberInfo findMemberInfoByToken(
             @RequestHeader(AUTHORIZATION) String token
     );
