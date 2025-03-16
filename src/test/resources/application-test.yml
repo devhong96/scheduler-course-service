@@ -1,7 +1,7 @@
 spring:
   cloud:
     config:
-      enabled: false
+      enabled: true
 
   jpa:
     database: h2
@@ -59,12 +59,12 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+scheduler_member_service_url: http://localhost:8080
+
 eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
-
-scheduler_member_service_url: http://localhost:8080
 
 management:
   endpoints:

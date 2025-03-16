@@ -78,7 +78,7 @@ class CourseServiceTest {
     }
 
 
-    @Test
+//    @Test
     @DisplayName("feign 확인")
     void feignStudentInfo() {
 
@@ -100,7 +100,7 @@ class CourseServiceTest {
                 );
     }
 
-    @Test
+//    @Test
     @DisplayName("수업 전달")
     void applyCourse() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
 

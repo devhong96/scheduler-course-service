@@ -53,7 +53,6 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.apache.kafka:connect-api:3.9.0'
 
-
     implementation 'io.github.openfeign:feign-okhttp:13.5'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'

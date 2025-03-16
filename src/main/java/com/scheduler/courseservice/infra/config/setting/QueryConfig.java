@@ -1,7 +1,6 @@
 package com.scheduler.courseservice.infra.config.setting;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import feign.okhttp.OkHttpClient;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +21,5 @@ public class QueryConfig {
         {
             return new JPAQueryFactory(DEFAULT, em);
         }
-    }
-
-    @Bean
-    public OkHttpClient okHttpClient() {
-        return new OkHttpClient();
     }
 }
