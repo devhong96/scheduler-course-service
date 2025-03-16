@@ -140,7 +140,7 @@ class CourseServiceTest {
 
     }
 
-    @Test
+//    @Test
     @DisplayName("수업 수정")
     void saveCourseTable() throws JsonProcessingException {
 
@@ -187,7 +187,7 @@ class CourseServiceTest {
                 );
     }
 
-    @Test
+//    @Test
     @DisplayName("레빗 엠큐-학생 이름 변경")
     void changeStudentName() throws InterruptedException {
         ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();

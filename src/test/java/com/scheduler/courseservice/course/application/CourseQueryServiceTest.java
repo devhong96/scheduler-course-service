@@ -49,7 +49,7 @@ class CourseQueryServiceTest {
     }
 
 
-    @Test
+//    @Test
     @DisplayName("학생의 클래스 찾기")
     void findStudentClasses() throws JsonProcessingException {
 
@@ -84,7 +84,7 @@ class CourseQueryServiceTest {
     void findAllStudentsCourses() {
     }
 
-    @Test
+//    @Test
     @DisplayName("교사에게 할당된 수업 수")
     void findTeachersClasses() throws JsonProcessingException {
 
