@@ -78,7 +78,7 @@ class CourseServiceTest {
     }
 
 
-//    @Test
+    @Test
     @DisplayName("feign 확인")
     void feignStudentInfo() {
 
@@ -100,7 +100,7 @@ class CourseServiceTest {
                 );
     }
 
-//    @Test
+    @Test
     @DisplayName("수업 전달")
     void applyCourse() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
 
@@ -108,7 +108,7 @@ class CourseServiceTest {
         final String expectedResponse = objectMapper
                 .writeValueAsString(studentInfo);
 
-        stubFor(post(urlEqualTo("/feign-member/student/info"))
+        stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -140,7 +140,7 @@ class CourseServiceTest {
 
     }
 
-//    @Test
+    @Test
     @DisplayName("수업 수정")
     void saveCourseTable() throws JsonProcessingException {
 
@@ -187,7 +187,7 @@ class CourseServiceTest {
                 );
     }
 
-//    @Test
+    @Test
     @DisplayName("레빗 엠큐-학생 이름 변경")
     void changeStudentName() throws InterruptedException {
         ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();

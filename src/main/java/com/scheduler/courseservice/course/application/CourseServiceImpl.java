@@ -48,8 +48,6 @@ public class CourseServiceImpl implements CourseService {
 
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
-        log.info("studentInfo: {}", studentInfo.toString());
-
         try {
             String value = objectMapper.writeValueAsString(
                     new CourseRequestMessage(studentInfo, upsertCourseRequest));

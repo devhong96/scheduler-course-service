@@ -49,7 +49,7 @@ class CourseQueryServiceTest {
     }
 
 
-//    @Test
+    @Test
     @DisplayName("학생의 클래스 찾기")
     void findStudentClasses() throws JsonProcessingException {
 
@@ -58,7 +58,7 @@ class CourseQueryServiceTest {
                         new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo")
                 );
 
-        stubFor(post(urlEqualTo("/feign-member/student/info"))
+        stubFor(get(urlEqualTo("/feign-member/student/info"))
                 .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -84,7 +84,7 @@ class CourseQueryServiceTest {
     void findAllStudentsCourses() {
     }
 
-//    @Test
+    @Test
     @DisplayName("교사에게 할당된 수업 수")
     void findTeachersClasses() throws JsonProcessingException {
 
@@ -92,13 +92,14 @@ class CourseQueryServiceTest {
         final String expectedResponse = objectMapper
                 .writeValueAsString(new TeacherInfo("teacher_001"));
 
-        stubFor(post(urlEqualTo("/feign-member/teacher/info"))
+        stubFor(get(urlEqualTo("/feign-member/teacher/info"))
                 .withHeader(AUTHORIZATION, matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withBody(expectedResponse)
                 ));
+
 
         CourseList teachersClasses = courseQueryService
                 .findTeachersClasses(token, mockYear, mockWeek);
