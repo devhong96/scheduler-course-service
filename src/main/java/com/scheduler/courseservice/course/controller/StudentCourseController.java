@@ -21,7 +21,10 @@ public class StudentCourseController {
     private final CourseService courseService;
     private final CourseQueryService courseQueryService;
 
-    @Operation(description = "학생 본인 금주 수업 조회")
+    @Operation(
+            summary = "학생 수업 조회",
+            description = "조회자의 금주 수업 조회"
+    )
     @GetMapping("class")
     public ResponseEntity<StudentCourseResponse> findClass(
             @RequestHeader(AUTHORIZATION) String token,
@@ -31,7 +34,10 @@ public class StudentCourseController {
         return new ResponseEntity<>(courseQueryService.findStudentClasses(token, year, weekOfYear), OK);
     }
 
-    @Operation(description = "수업 제출")
+    @Operation(
+            summary = "수업 제출",
+            description = "수정, 저장 포함. redis를 이용하여 동시성과 중복을 검사한 후, kafka를 이용하여 db에 저장함."
+    )
     @PostMapping("class")
     public ResponseEntity<Void> applyCourse(
             @RequestHeader(AUTHORIZATION) String token,

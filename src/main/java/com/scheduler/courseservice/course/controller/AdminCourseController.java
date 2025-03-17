@@ -21,7 +21,10 @@ public class AdminCourseController {
 
     private final CourseQueryService courseQueryService;
 
-    @Operation(description = "관리자 버전 조회")
+    @Operation(
+            summary = "관리자 수업 조회",
+            description = "관리자의 학생 전체 수업 조회. keyword -> 학생, 교사의 고유값 이름"
+    )
     @GetMapping("class")
     public ResponseEntity<Page<StudentCourseResponse>> managePage(
             @RequestParam(defaultValue = "1") int page,

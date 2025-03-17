@@ -131,6 +131,7 @@ public class CourseServiceImpl implements CourseService {
                 }
 
             } catch (Exception e) {
+                log.error("Error processing message: {}", message, e);
                 throw new RuntimeException(e);
             }
         }

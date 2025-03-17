@@ -17,7 +17,10 @@ public class TeacherCourseController {
 
     private final CourseQueryService courseQueryService;
 
-    @Operation(description = "선생님 버전 조회")
+    @Operation(
+            summary = "교사 수업 조회",
+            description = "조회자의 주 단위 수업 조회"
+    )
     @GetMapping("class")
     public ResponseEntity<CourseList> findTeachersClasses(
             @RequestHeader(AUTHORIZATION) String token,
