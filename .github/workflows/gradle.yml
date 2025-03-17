@@ -32,6 +32,12 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
+    - name: Login docker hub
+      uses: docker/login-action@v2
+      with:
+       username: ${{ secrets.DOCKERHUB_USERNAME }}
+       password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     - name: Start RabbitMQ
       uses: mer-team/rabbitmq-mng-action@v1.2
       with:
@@ -48,19 +54,11 @@ jobs:
 
     - name: Run Tests
       run: ./gradlew test
-
     - name: Build with Gradle Wrapper
       run: ./gradlew build -x test
-      
+
     - name: Build docker image
       run: docker build -t devhong96/scheduler-course-service .
-
-    - name: Login docker hub
-      uses: docker/login-action@v2
-      with:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_TOKEN }}
-       
     - name: Publish to docker hub
       run: docker push devhong96/scheduler-course-service:latest
 
