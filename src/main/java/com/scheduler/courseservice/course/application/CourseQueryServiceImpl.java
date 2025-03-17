@@ -47,6 +47,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
         if (studentInfo == null) {
             throw new IllegalStateException("StudentInfo is null");
         }
+
         String studentId = studentInfo.getStudentId();
         int finalYear = (year != null) ? year : localDate.getYear();
         int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
@@ -67,7 +68,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
     @CircuitBreaker(name = "teacherService", fallbackMethod = "fallbackFindTeachersClasses")
     public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
 
-        String teacherId = memberServiceClient.findTeachersClasses(token).getTeacherId();
+        String teacherId = memberServiceClient.findTeacherInfoByToken(token).getTeacherId();
 
         int finalYear = (year != null) ? year : localDate.getYear();
         int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());

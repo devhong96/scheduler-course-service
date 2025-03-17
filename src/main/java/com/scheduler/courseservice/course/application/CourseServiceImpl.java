@@ -48,6 +48,8 @@ public class CourseServiceImpl implements CourseService {
 
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
+        log.info("studentInfo: {}", studentInfo.toString());
+
         try {
             String value = objectMapper.writeValueAsString(
                     new CourseRequestMessage(studentInfo, upsertCourseRequest));
@@ -81,7 +83,6 @@ public class CourseServiceImpl implements CourseService {
         // Redis 캐시 키 구성: 예) "courseSchedules:2025:11"
         String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
         RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
-
 
         List<CourseSchedule> redisSchedules = bucket.get();
         if (redisSchedules == null) {
@@ -131,7 +132,7 @@ public class CourseServiceImpl implements CourseService {
                     lock.unlock();
                 }
 
-            } catch (JsonProcessingException | InterruptedException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
