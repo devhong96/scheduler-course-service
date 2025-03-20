@@ -17,6 +17,11 @@ import static lombok.AccessLevel.PROTECTED;
 @Getter
 @DynamicUpdate
 @NoArgsConstructor(access = PROTECTED)
+@Table(indexes = {
+        @Index(name = "idx_course_year", columnList = "courseYear"),
+        @Index(name = "idx_week_of_year", columnList = "weekOfYear"),
+        @Index(name = "idx_year_week", columnList = "courseYear, weekOfYear")
+})
 public class CourseSchedule extends BaseEntity {
 
     @Id

@@ -3,6 +3,7 @@ package com.scheduler.courseservice.course.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,22 +67,6 @@ public class CourseInfoResponse {
 
         public List<Integer> getClassList(Day day) {
             return new ArrayList<>(classSchedule.get(day));
-        }
-    }
-
-    @Getter
-    @Setter
-    public static class PageCourseResponse {
-        private List<StudentCourseResponse> boards;
-        private int currentPage;
-        private long totalElements;
-        private int totalPages;
-
-        public PageCourseResponse(List<StudentCourseResponse> boards, int currentPage, long totalElements, int totalPages) {
-            this.boards = boards;
-            this.currentPage = currentPage;
-            this.totalElements = totalElements;
-            this.totalPages = totalPages;
         }
     }
 }

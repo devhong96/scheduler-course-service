@@ -33,21 +33,12 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(
-            value = "allStudentCourses",
-            key = "{#page, #size, #keyword}",
-            cacheManager = "courseCacheManager"
-    )
-    public PageCourseResponse findAllStudentsCourses(
+    public Page<StudentCourseResponse> findAllStudentsCourses(
             Integer page, Integer size, String keyword
     ) {
-        Page<StudentCourseResponse> courses = courseRepository.findAllStudentsCourses(of(page - 1, size), keyword);
+        return courseRepository
+                .findAllStudentsCourses(of(page - 1, size), keyword);
 
-        return new PageCourseResponse(
-                courses.getContent(),
-                courses.getNumber() + 1,
-                courses.getTotalElements(),
-                courses.getTotalPages());
     }
 
     @Override

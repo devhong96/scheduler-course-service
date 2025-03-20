@@ -1,12 +1,14 @@
 package com.scheduler.courseservice.course.component;
 
 import com.scheduler.courseservice.course.repository.CourseRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +31,8 @@ public class RedisCourse {
     private static final long CACHE_TTL = 7;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    @Async
+    @PostConstruct
     @Scheduled(cron = "30 59 23 * * SUN", zone = "Asia/Seoul")
     public void preloadAllDataToRedis() {
         RLock lock = redissonClient.getLock("redis_course_lock");

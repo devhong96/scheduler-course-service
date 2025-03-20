@@ -1,10 +1,12 @@
 package com.scheduler.courseservice.course.application;
 
+import org.springframework.data.domain.Page;
+
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.*;
 
 public interface CourseQueryService {
 
-    PageCourseResponse findAllStudentsCourses(Integer page, Integer size, String keyword);
+    Page<StudentCourseResponse> findAllStudentsCourses(Integer page, Integer size, String keyword);
 
     CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear);
 

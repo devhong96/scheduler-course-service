@@ -1,7 +1,6 @@
 package com.scheduler.courseservice.course.controller;
 
 import com.scheduler.courseservice.course.application.CourseQueryService;
-import com.scheduler.courseservice.course.dto.CourseInfoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -27,7 +25,7 @@ public class AdminCourseController {
             description = "관리자의 학생 전체 수업 조회. keyword -> 학생, 교사의 고유값 이름"
     )
     @GetMapping("class")
-    public ResponseEntity<PageCourseResponse> managePage(
+    public ResponseEntity<Page<StudentCourseResponse>> managePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
