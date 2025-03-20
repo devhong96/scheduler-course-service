@@ -12,7 +12,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
 
 @Configuration
@@ -20,7 +19,7 @@ import static org.springframework.data.redis.serializer.RedisSerializationContex
 public class RedisCacheConfig {
 
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+    public CacheManager courseCacheManager(RedisConnectionFactory redisConnectionFactory) {
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
@@ -28,10 +27,14 @@ public class RedisCacheConfig {
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(defaultConfig)
+                .withCacheConfiguration("allStudentCourses",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.ofSeconds(30L))
+                                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class))))
                 .withCacheConfiguration("teacherCourses",
                         RedisCacheConfiguration.defaultCacheConfig()
                                 .entryTtl(Duration.ofDays(7))
-                                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(StudentCourseResponse.class))))
+                                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class))))
                 .withCacheConfiguration("studentCourses",
                         RedisCacheConfiguration.defaultCacheConfig()
                                 .entryTtl(Duration.ofDays(7))

@@ -5,6 +5,7 @@ import com.scheduler.courseservice.course.repository.CourseRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
@@ -31,10 +33,21 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<StudentCourseResponse> findAllStudentsCourses(
+    @Cacheable(
+            value = "allStudentCourses",
+            key = "{#page, #size, #keyword}",
+            cacheManager = "courseCacheManager"
+    )
+    public PageCourseResponse findAllStudentsCourses(
             Integer page, Integer size, String keyword
     ) {
-        return courseRepository.findAllStudentsCourses(of(page - 1, size), keyword);
+        Page<StudentCourseResponse> courses = courseRepository.findAllStudentsCourses(of(page - 1, size), keyword);
+
+        return new PageCourseResponse(
+                courses.getContent(),
+                courses.getNumber() + 1,
+                courses.getTotalElements(),
+                courses.getTotalPages());
     }
 
     @Override
