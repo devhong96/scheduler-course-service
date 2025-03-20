@@ -14,6 +14,7 @@ spring:
     redis:
       host: localhost
       port: 6379
+      redis-preload-enabled: false
 
   datasource: # jdbc
     driver-class-name: org.h2.Driver

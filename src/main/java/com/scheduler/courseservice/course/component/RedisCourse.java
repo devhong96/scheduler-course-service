@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +22,9 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 @RequiredArgsConstructor
 public class RedisCourse {
 
+    @Value("${spring.data.redis.redis-preload-enabled:true}") // 기본값 true
+    private boolean redisPreloadEnabled;
+
     private final CourseRepository courseRepository;
     private final RedissonClient redissonClient;
 
@@ -31,10 +34,15 @@ public class RedisCourse {
     private static final long CACHE_TTL = 7;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Async
     @PostConstruct
     @Scheduled(cron = "30 59 23 * * SUN", zone = "Asia/Seoul")
     public void preloadAllDataToRedis() {
+
+        if (!redisPreloadEnabled) {
+            log.info("🔹 테스트 환경이므로 실행하지 않음");
+            return;
+        }
+
         RLock lock = redissonClient.getLock("redis_course_lock");
 
         if (!lock.tryLock()) {
