@@ -24,27 +24,10 @@ public class CourseRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    @Cacheable(
-            cacheNames = "findAllStudentsCourses",
-            key = "'studentsCourses:page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize",
-            cacheManager = "courseCacheManager"
-    )
-    public Page<StudentCourseResponse> findAllStudentsCourses(Pageable pageable, String keyword) {
-        List<StudentCourseResponse> contents = queryFactory
-                .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.studentId,
-                        courseSchedule.studentName,
-                        courseSchedule.teacherId,
-                        courseSchedule.teacherName,
-                        courseSchedule.mondayClassHour,
-                        courseSchedule.tuesdayClassHour,
-                        courseSchedule.wednesdayClassHour,
-                        courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour,
-                        courseSchedule.courseYear,
-                        courseSchedule.weekOfYear
-                ))
-                .from(courseSchedule)
+    public Page<StudentCourseResponse> findAllStudentsCourses(
+            Pageable pageable, String keyword
+    ) {
+        List<StudentCourseResponse> contents = commonStudentCourse()
                 .where(
                         studentNameContains(keyword)
                                 .or(studentIdEq(keyword))
@@ -62,24 +45,17 @@ public class CourseRepository {
         return getPage(contents, pageable, totalCount::fetchOne);
     }
 
-    public List<StudentCourseResponse> getTeacherWeeklyCoursesForComparison(
-            String teacherId, Integer year, Integer weekOfYear) {
-
-        return queryFactory
-                .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.studentId,
-                        courseSchedule.studentName,
-                        courseSchedule.teacherId,
-                        courseSchedule.teacherName,
-                        courseSchedule.mondayClassHour,
-                        courseSchedule.tuesdayClassHour,
-                        courseSchedule.wednesdayClassHour,
-                        courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour,
-                        courseSchedule.courseYear,
-                        courseSchedule.weekOfYear
-                ))
-                .from(courseSchedule)
+    @Cacheable(
+            cacheNames = "teacherCourses",
+            key = "'teacherCourses:teacherId:' + #teacherId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
+            cacheManager = "cacheManager",
+            condition = "!(#year == T(java.time.LocalDate).now().getYear() && " +
+                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
+    )
+    public List<StudentCourseResponse> getWeeklyCoursesByTeacherId(
+            String teacherId, Integer year, Integer weekOfYear
+    ){
+        return commonStudentCourse()
                 .where(
                         yearEq(year),
                         weekOfYearEq(weekOfYear),
@@ -88,35 +64,33 @@ public class CourseRepository {
                 .fetch();
     }
 
-    public List<StudentCourseResponse> getAllStudentsWeeklyCoursesForComparison(
-            Integer year, Integer weekOfYear
-    ){
-        return queryFactory
-                .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.studentId,
-                        courseSchedule.studentName,
-                        courseSchedule.teacherId,
-                        courseSchedule.teacherName,
-                        courseSchedule.mondayClassHour,
-                        courseSchedule.tuesdayClassHour,
-                        courseSchedule.wednesdayClassHour,
-                        courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour,
-                        courseSchedule.courseYear,
-                        courseSchedule.weekOfYear
-                ))
-                .from(courseSchedule)
-                .where(
-                        yearEq(year),
-                        weekOfYearEq(weekOfYear)
-                )
-                .fetch();
-    }
-
+    @Cacheable(
+            cacheNames = "studentCourses",
+            key = "'studentCourses:studentId:' + #studentId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
+            cacheManager = "cacheManager",
+            condition = "!(#year == T(java.time.LocalDate).now().getYear() && " +
+                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
+    )
     public StudentCourseResponse getWeeklyCoursesByStudentId(
             String studentId, Integer year, Integer weekOfYear
     ) {
-        StudentCourseResponse result = queryFactory
+        StudentCourseResponse result = commonStudentCourse()
+                .where(
+                        yearEq(year),
+                        weekOfYearEq(weekOfYear),
+                        studentIdEq(studentId)
+                )
+                .fetchOne();
+
+        return result != null ? result : new StudentCourseResponse();
+    }
+
+    public List<StudentCourseResponse> findAllSchedule() {
+        return commonStudentCourse().fetch();
+    }
+
+    public JPAQuery<StudentCourseResponse> commonStudentCourse() {
+        return queryFactory
                 .select(
                         Projections.fields(StudentCourseResponse.class,
                                 courseSchedule.studentId,
@@ -131,41 +105,7 @@ public class CourseRepository {
                                 courseSchedule.courseYear,
                                 courseSchedule.weekOfYear
                         ))
-                .from(courseSchedule)
-                .where(
-                        yearEq(year),
-                        weekOfYearEq(weekOfYear),
-                        studentIdEq(studentId)
-                )
-                .fetchOne();
-
-        return result != null ? result : new StudentCourseResponse();
-    }
-
-    public List<StudentCourseResponse> getStudentClassByTeacherId(
-            String teacherId, int year, int weekOfYear
-    ){
-        return queryFactory
-                .select(Projections.fields(StudentCourseResponse.class,
-                        courseSchedule.studentId,
-                        courseSchedule.studentName,
-                        courseSchedule.teacherId,
-                        courseSchedule.teacherName,
-                        courseSchedule.mondayClassHour,
-                        courseSchedule.tuesdayClassHour,
-                        courseSchedule.wednesdayClassHour,
-                        courseSchedule.thursdayClassHour,
-                        courseSchedule.fridayClassHour,
-                        courseSchedule.courseYear,
-                        courseSchedule.weekOfYear
-                ))
-                .from(courseSchedule)
-                .where(
-                        yearEq(year),
-                        weekOfYearEq(weekOfYear),
-                        teacherIdEq(teacherId)
-                )
-                .fetch();
+                .from(courseSchedule);
     }
 
     private BooleanBuilder yearEq(int year) {

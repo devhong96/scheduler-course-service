@@ -8,33 +8,35 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
 
 @Configuration
 @EnableCaching
 public class RedisCacheConfig {
 
     @Bean
-    public CacheManager courseCacheManager(RedisConnectionFactory redisConnectionFactory) {
-        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
-                .defaultCacheConfig()
-                .serializeKeysWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(
-                                new StringRedisSerializer()))
-                .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(
-                                new Jackson2JsonRedisSerializer<>(Object.class)
-                        )
-                )
-                .entryTtl(Duration.ofMinutes(1L));
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
+                .entryTtl(Duration.ofDays(7));
 
-        return RedisCacheManager
-                .RedisCacheManagerBuilder
-                .fromConnectionFactory(redisConnectionFactory)
-                .cacheDefaults(redisCacheConfiguration)
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(defaultConfig)
+                .withCacheConfiguration("teacherCourses",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.ofDays(7))
+                                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(StudentCourseResponse.class))))
+                .withCacheConfiguration("studentCourses",
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.ofDays(7))
+                                .serializeValuesWith(SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class))))
                 .build();
     }
+
 }

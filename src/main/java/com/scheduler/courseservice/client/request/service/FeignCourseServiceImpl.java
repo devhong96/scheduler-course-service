@@ -1,13 +1,16 @@
 package com.scheduler.courseservice.client.request.service;
 
 import com.scheduler.courseservice.course.component.DateProvider;
+import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
-import com.scheduler.courseservice.course.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseExistenceResponse;
@@ -18,26 +21,56 @@ import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseRe
 public class FeignCourseServiceImpl implements FeignCourseService {
 
     private final DateProvider dateProvider;
-    private final CourseRepository courseRepository;
+    private final RedissonClient redissonClient;
+
     private final CourseJpaRepository courseJpaRepository;
 
     @Override
     @Transactional
     public CourseReassignmentResponse validateStudentCoursesAndReassign(String teacherId, String studentId) {
 
-        List<StudentCourseResponse> teacherCourses = courseRepository
-                .getTeacherWeeklyCoursesForComparison(teacherId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
+        int currentYear = dateProvider.getCurrentYear();
+        int currentWeek = dateProvider.getCurrentWeek();
+        String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
+        RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
 
-        StudentCourseResponse studentCourses = courseRepository
-                .getWeeklyCoursesByStudentId(studentId, dateProvider.getCurrentYear(), dateProvider.getCurrentWeek());
+        List<CourseSchedule> redisScheduleList = bucket.get();
+        if (redisScheduleList == null) {
+            redisScheduleList = courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek);
+            bucket.set(redisScheduleList);
+        }
 
-        if (teacherCourses == null || studentCourses == null) {
+        // 교사 주간 수업 조회
+        List<StudentCourseResponse> teacherCourses = redisScheduleList.stream()
+                .filter(schedule -> schedule.getTeacherId().equals(teacherId))
+                .map(this::mapToStudentCourseResponse)
+                .collect(Collectors.toList());
+
+        // 학생 주간 수업 조회
+        StudentCourseResponse studentCourses = redisScheduleList.stream()
+                .filter(schedule -> schedule.getStudentId().equals(studentId))
+                .findFirst()
+                .map(this::mapToStudentCourseResponse)
+                .orElse(null);
+
+        if (teacherCourses.isEmpty() || studentCourses == null) {
             throw new IllegalArgumentException("주간 수업 데이터를 찾을 수 없습니다.");
         }
 
         classValidator(teacherCourses, studentCourses);
 
         return new CourseReassignmentResponse(true);
+    }
+
+    private StudentCourseResponse mapToStudentCourseResponse(CourseSchedule schedule) {
+        return new StudentCourseResponse(
+                schedule.getStudentId(),
+                schedule.getFridayClassHour(),
+                schedule.getMondayClassHour(),
+                schedule.getTuesdayClassHour(),
+                schedule.getWednesdayClassHour(),
+                schedule.getThursdayClassHour()
+        );
     }
 
     private void classValidator(

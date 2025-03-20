@@ -14,27 +14,33 @@ public class CourseInfoResponse {
     @Setter
     public static class StudentCourseResponse {
 
-        private String studentId;
+        private String studentId = "";
+        private String studentName = "";
+        private String teacherId = "";
+        private String teacherName = "";
 
-        private String studentName;
+        private Integer mondayClassHour = 0;
+        private Integer tuesdayClassHour = 0;
+        private Integer wednesdayClassHour = 0;
+        private Integer thursdayClassHour = 0;
+        private Integer fridayClassHour = 0;
 
-        private String teacherId;
+        private Integer courseYear = 0;
+        private Integer weekOfYear = 0;
 
-        private String teacherName;
+        public StudentCourseResponse() {
+        }
 
-        private Integer mondayClassHour;
-
-        private Integer tuesdayClassHour;
-
-        private Integer wednesdayClassHour;
-
-        private Integer thursdayClassHour;
-
-        private Integer fridayClassHour;
-
-        private Integer courseYear;
-
-        private Integer weekOfYear;
+        public StudentCourseResponse(String studentId, Integer mondayClassHour, Integer tuesdayClassHour,
+                                     Integer wednesdayClassHour, Integer thursdayClassHour,
+                                     Integer fridayClassHour) {
+            this.studentId = studentId;
+            this.mondayClassHour = mondayClassHour;
+            this.tuesdayClassHour = tuesdayClassHour;
+            this.wednesdayClassHour = wednesdayClassHour;
+            this.thursdayClassHour = thursdayClassHour;
+            this.fridayClassHour = fridayClassHour;
+        }
     }
 
     @Getter

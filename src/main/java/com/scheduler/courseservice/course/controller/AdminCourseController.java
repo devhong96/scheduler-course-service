@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
-import static org.springframework.data.domain.PageRequest.of;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -31,6 +30,6 @@ public class AdminCourseController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
     ) {
-        return new ResponseEntity<>(courseQueryService.findAllStudentsCourses(of(page - 1, size), keyword), OK);
+        return new ResponseEntity<>(courseQueryService.findAllStudentsCourses(page, size, keyword), OK);
     }
 }

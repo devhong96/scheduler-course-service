@@ -6,7 +6,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +18,7 @@ import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.Stu
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
+import static org.springframework.data.domain.PageRequest.of;
 
 @Slf4j
 @Service
@@ -30,14 +30,15 @@ public class CourseQueryServiceImpl implements CourseQueryService {
     private final MemberServiceClient memberServiceClient;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<StudentCourseResponse> findAllStudentsCourses(
-            Pageable pageable, String keyword
+            Integer page, Integer size, String keyword
     ) {
-        return courseRepository.findAllStudentsCourses(pageable, keyword);
+        return courseRepository.findAllStudentsCourses(of(page - 1, size), keyword);
     }
 
     @Override
+    @Transactional(readOnly = true)
     @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackFindStudentClasses")
     public StudentCourseResponse findStudentClasses(
             String token, Integer year, Integer weekOfYear
@@ -49,6 +50,7 @@ public class CourseQueryServiceImpl implements CourseQueryService {
         }
 
         String studentId = studentInfo.getStudentId();
+
         int finalYear = (year != null) ? year : localDate.getYear();
         int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
 
@@ -64,17 +66,17 @@ public class CourseQueryServiceImpl implements CourseQueryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @CircuitBreaker(name = "teacherService", fallbackMethod = "fallbackFindTeachersClasses")
     public CourseList findTeachersClasses(String token, Integer year, Integer weekOfYear) {
 
         String teacherId = memberServiceClient.findTeacherInfoByToken(token).getTeacherId();
 
-        int finalYear = (year != null) ? year : localDate.getYear();
-        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+        Integer finalYear = (year != null) ? year : localDate.getYear();
+        Integer finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
 
         List<StudentCourseResponse> studentClassByTeacherName = courseRepository
-                .getStudentClassByTeacherId(teacherId, finalYear, finalWeekOfYear);
+                .getWeeklyCoursesByTeacherId(teacherId, finalYear, finalWeekOfYear);
 
         CourseList classList = new CourseList();
 

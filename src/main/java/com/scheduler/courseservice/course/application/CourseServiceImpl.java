@@ -73,7 +73,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     public void saveCourseTable(List<String> messages) {
         if (messages.isEmpty()) return;
-        List<CourseSchedule> courseSchedules = new ArrayList<>();
+        List<CourseSchedule> courseScheduleList = new ArrayList<>();
 
         int currentYear = localDate.getYear();
         int currentWeek = localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
@@ -82,10 +82,11 @@ public class CourseServiceImpl implements CourseService {
         String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
         RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
 
-        List<CourseSchedule> redisSchedules = bucket.get();
-        if (redisSchedules == null) {
-            redisSchedules = courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek);
-            bucket.set(redisSchedules);
+        List<CourseSchedule> redisScheduleList = bucket.get();
+
+        if (redisScheduleList == null) {
+            redisScheduleList = courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek);
+            bucket.set(redisScheduleList);
         }
 
         for (String message : messages) {
@@ -104,7 +105,7 @@ public class CourseServiceImpl implements CourseService {
 
                 try {
                     // 해당 시간대에 다른 학생의 수업이 있는지 확인
-                    checkScheduleConflict(courseScheduleMessage, redisSchedules);
+                    checkScheduleConflict(courseScheduleMessage, redisScheduleList);
 
                     // 기존 데이터 조회 (중복 방지)
                     Optional<CourseSchedule> existingSchedule = courseJpaRepository
@@ -116,14 +117,16 @@ public class CourseServiceImpl implements CourseService {
 
                     if (existingSchedule.isPresent()) {
                         // 기존 데이터 업데이트
-                        CourseSchedule schedule = existingSchedule.get();
-                        schedule.updateSchedule(courseScheduleMessage);
-                        courseJpaRepository.save(schedule);
+                        CourseSchedule courseSchedule = existingSchedule.get();
+                        courseSchedule.updateSchedule(courseScheduleMessage);
+                        courseJpaRepository.save(courseSchedule);
+                        redisScheduleList.removeIf(s -> s.getStudentId().equals(courseScheduleMessage.getStudentId()));
+                        redisScheduleList.add(courseSchedule);
                     } else {
                         // 새로운 데이터 추가
                         CourseSchedule courseSchedule = CourseSchedule.create(courseScheduleMessage);
-                        courseSchedules.add(courseSchedule);
-                        redisSchedules.add(courseSchedule);
+                        courseScheduleList.add(courseSchedule);
+                        redisScheduleList.add(courseSchedule);
                     }
 
                 } finally {
@@ -135,9 +138,10 @@ public class CourseServiceImpl implements CourseService {
                 throw new RuntimeException(e);
             }
         }
-        if (!courseSchedules.isEmpty()) {
-            courseJpaRepository.saveAll(courseSchedules);
-            bucket.set(redisSchedules);
+
+        if (!courseScheduleList.isEmpty()) {
+            courseJpaRepository.saveAll(courseScheduleList);
+            bucket.set(redisScheduleList);
         }
     }
 
