@@ -49,7 +49,8 @@ public class CourseRepository {
             cacheNames = "teacherCourses",
             key = "'teacherCourses:teacherId:' + #teacherId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
             cacheManager = "courseCacheManager",
-            condition = "!(#year == T(java.time.LocalDate).now().getYear() && " +
+            condition =
+                    "!(#year == T(java.time.LocalDate).now().getYear() && " +
                     "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
     )
     public List<StudentCourseResponse> getWeeklyCoursesByTeacherId(
@@ -68,7 +69,8 @@ public class CourseRepository {
             cacheNames = "studentCourses",
             key = "'studentCourses:studentId:' + #studentId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
             cacheManager = "courseCacheManager",
-            condition = "!(#year == T(java.time.LocalDate).now().getYear() && " +
+            condition =
+                    "!(#year == T(java.time.LocalDate).now().getYear() && " +
                     "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
     )
     public StudentCourseResponse getWeeklyCoursesByStudentId(
