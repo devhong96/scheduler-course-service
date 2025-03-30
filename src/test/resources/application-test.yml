@@ -50,6 +50,10 @@ spring:
     basename: errors
 
   kafka:
+    topics:
+      course:
+        apply: course_schedule_logs
+        group-id: group-1
     producer:
       bootstrap-servers: ${spring.embedded.kafka.brokers}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

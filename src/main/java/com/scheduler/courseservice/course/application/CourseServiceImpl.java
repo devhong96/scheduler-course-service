@@ -69,8 +69,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @KafkaListener(
-            topics = "${spring.kafka.topic.course.apply}",
-            groupId = "${spring.kafka.topic.course.group-id}",
+            topics = "${spring.kafka.topics.course.apply}",
+            groupId = "${spring.kafka.topics.course.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     @Transactional
