@@ -9,6 +9,10 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
+import java.util.Map;
+
+import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
+
 @Configuration
 @RequiredArgsConstructor
 public class KafkaConfig {
@@ -17,7 +21,9 @@ public class KafkaConfig {
 
     @Bean
     public ProducerFactory<String, String> producerFactory() {
-        return new DefaultKafkaProducerFactory<>(kafkaProperties.getProducer().buildProperties(null));
+        Map<String, Object> stringObjectMap = kafkaProperties.getProducer().buildProperties(null);
+        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        return new DefaultKafkaProducerFactory<>(stringObjectMap);
     }
 
     @Bean
@@ -27,8 +33,11 @@ public class KafkaConfig {
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(kafkaProperties.getConsumer().buildProperties(null));
+        Map<String, Object> stringObjectMap = kafkaProperties.getConsumer().buildProperties(null);
+        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        return new DefaultKafkaConsumerFactory<>(stringObjectMap);
     }
+
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {

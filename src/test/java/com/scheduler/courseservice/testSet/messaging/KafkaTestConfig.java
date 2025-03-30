@@ -11,6 +11,8 @@ import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Map;
 
+import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
+
 @TestConfiguration
 @RequiredArgsConstructor
 public class KafkaTestConfig {
@@ -20,7 +22,7 @@ public class KafkaTestConfig {
     @Bean
     public ProducerFactory<String, String> testProducerFactory() {
         Map<String, Object> stringObjectMap = kafkaProperties.getProducer().buildProperties(null);
-
+        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         return new DefaultKafkaProducerFactory<>(stringObjectMap);
     }
 
@@ -31,7 +33,9 @@ public class KafkaTestConfig {
 
     @Bean
     public ConsumerFactory<String, String> testConsumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(kafkaProperties.getConsumer().buildProperties(null));
+        Map<String, Object> stringObjectMap = kafkaProperties.getConsumer().buildProperties(null);
+        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        return new DefaultKafkaConsumerFactory<>(stringObjectMap);
     }
 
     @Bean
