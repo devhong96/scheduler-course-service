@@ -1,6 +1,7 @@
 package com.scheduler.courseservice.course.application;
 
 import com.scheduler.courseservice.client.MemberServiceClient;
+import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.repository.CourseRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -9,14 +10,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
-import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static org.springframework.data.domain.PageRequest.of;
 
 @Slf4j
@@ -24,7 +23,7 @@ import static org.springframework.data.domain.PageRequest.of;
 @RequiredArgsConstructor
 public class CourseQueryServiceImpl implements CourseQueryService {
 
-    private final LocalDate localDate = LocalDate.now();
+    private final DateProvider dateProvider;
     private final CourseRepository courseRepository;
     private final MemberServiceClient memberServiceClient;
 
@@ -52,11 +51,8 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 
         String studentId = studentInfo.getStudentId();
 
-        int finalYear = (year != null) ? year : localDate.getYear();
-        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WEEK_OF_WEEK_BASED_YEAR);
-
-        System.out.println("finalYear = " + finalYear);
-        System.out.println("finalWeekOfYear = " + finalWeekOfYear);
+        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
 
         return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
     }
@@ -76,11 +72,8 @@ public class CourseQueryServiceImpl implements CourseQueryService {
 
         String teacherId = memberServiceClient.findTeacherInfoByToken(token).getTeacherId();
 
-        Integer finalYear = (year != null) ? year : localDate.getYear();
-        Integer finalWeekOfYear = (weekOfYear != null) ? weekOfYear : localDate.get(WEEK_OF_WEEK_BASED_YEAR);
-
-        System.out.println("finalYear = " + finalYear);
-        System.out.println("finalWeekOfYear = " + finalWeekOfYear);
+        int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
+        int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
 
         List<StudentCourseResponse> studentClassByTeacherName = courseRepository
                 .getWeeklyCoursesByTeacherId(teacherId, finalYear, finalWeekOfYear);

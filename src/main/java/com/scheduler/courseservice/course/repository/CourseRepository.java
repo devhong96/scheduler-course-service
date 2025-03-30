@@ -5,17 +5,14 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.scheduler.courseservice.course.component.DateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.temporal.WeekFields;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 import static com.scheduler.courseservice.course.domain.QCourseSchedule.courseSchedule;
@@ -27,6 +24,7 @@ import static org.springframework.data.support.PageableExecutionUtils.getPage;
 public class CourseRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final DateProvider dateProvider;
 
     public Page<StudentCourseResponse> findAllStudentsCourses(
             Pageable pageable, String keyword
@@ -93,8 +91,8 @@ public class CourseRepository {
 
     public List<StudentCourseResponse> findAllSchedule() {
 
-        int currentYear = Year.now().getValue();
-        int currentWeek = LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear());
+        int currentYear = dateProvider.getCurrentYear();
+        int currentWeek = dateProvider.getCurrentWeek();
 
         return commonStudentCourse()
                 .where(

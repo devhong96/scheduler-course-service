@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
-@EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
+@EmbeddedKafka(partitions = 3, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 @Import({KafkaTestConfig.class, TestConfig.class})
 @ActiveProfiles("test")
 public @interface IntegrationTest {

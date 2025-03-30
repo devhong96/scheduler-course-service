@@ -3,6 +3,7 @@ package com.scheduler.courseservice.course.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scheduler.courseservice.client.MemberServiceClient;
+import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -11,13 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.temporal.WeekFields;
 import java.util.*;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
@@ -31,15 +31,17 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
 
+    private final DateProvider dateProvider;
+
+    @Value("${spring.kafka.topics.course.apply}")
+    private String courseApplyTopic;
+
     private final MemberServiceClient memberServiceClient;
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
-
     private final CourseJpaRepository courseJpaRepository;
 
     private final ObjectMapper objectMapper;
-
-    private final LocalDate localDate = LocalDate.now();
 
     @Override
     @Transactional
@@ -52,7 +54,7 @@ public class CourseServiceImpl implements CourseService {
             String value = objectMapper.writeValueAsString(
                     new CourseRequestMessage(studentInfo, upsertCourseRequest));
 
-            kafkaTemplate.send("topic_course_schedule_logs", value);
+            kafkaTemplate.send(courseApplyTopic, value);
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -67,8 +69,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @KafkaListener(
-            topics = "topic_course_schedule_logs",
-            groupId = "group-1",
+            topics = "${spring.kafka.topic.course.apply}",
+            groupId = "${spring.kafka.topic.course.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     @Transactional
@@ -76,8 +78,8 @@ public class CourseServiceImpl implements CourseService {
         if (messages.isEmpty()) return;
         List<CourseSchedule> courseScheduleList = new ArrayList<>();
 
-        int currentYear = localDate.getYear();
-        int currentWeek = localDate.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+        int currentYear = dateProvider.getCurrentYear();
+        int currentWeek = dateProvider.getCurrentWeek();
 
         // Redis 캐시 키 구성: 예) "courseSchedules:2025:11"
         String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
@@ -94,7 +96,7 @@ public class CourseServiceImpl implements CourseService {
             try {
                 CourseRequestMessage courseScheduleMessage = objectMapper.readValue(message, CourseRequestMessage.class);
 
-                String lockKey = "courseLock:" + courseScheduleMessage.getStudentId();
+                String lockKey = "courseLock:" + courseScheduleMessage.getTeacherId();
                 RLock lock = redissonClient.getLock(lockKey);
 
                 boolean available = lock.tryLock(10, 1, SECONDS);

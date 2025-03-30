@@ -2,7 +2,6 @@ package com.scheduler.courseservice.course.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.util.*;
 
@@ -10,7 +9,6 @@ public class CourseInfoResponse {
 
     @Getter
     @Setter
-    @ToString
     public static class StudentCourseResponse {
 
         private String studentId = "";
@@ -30,9 +28,10 @@ public class CourseInfoResponse {
         public StudentCourseResponse() {
         }
 
-        public StudentCourseResponse(String studentId, Integer mondayClassHour, Integer tuesdayClassHour,
-                                     Integer wednesdayClassHour, Integer thursdayClassHour,
-                                     Integer fridayClassHour) {
+        public StudentCourseResponse(
+                String studentId, Integer mondayClassHour, Integer tuesdayClassHour,
+                Integer wednesdayClassHour, Integer thursdayClassHour, Integer fridayClassHour
+        ) {
             this.studentId = studentId;
             this.mondayClassHour = mondayClassHour;
             this.tuesdayClassHour = tuesdayClassHour;
@@ -41,16 +40,29 @@ public class CourseInfoResponse {
             this.fridayClassHour = fridayClassHour;
         }
 
+        //데이터 동일성 확인을 위함.
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             StudentCourseResponse that = (StudentCourseResponse) o;
-            return Objects.equals(studentId, that.studentId) && Objects.equals(studentName, that.studentName) && Objects.equals(teacherId, that.teacherId) && Objects.equals(teacherName, that.teacherName) && Objects.equals(mondayClassHour, that.mondayClassHour) && Objects.equals(tuesdayClassHour, that.tuesdayClassHour) && Objects.equals(wednesdayClassHour, that.wednesdayClassHour) && Objects.equals(thursdayClassHour, that.thursdayClassHour) && Objects.equals(fridayClassHour, that.fridayClassHour) && Objects.equals(courseYear, that.courseYear) && Objects.equals(weekOfYear, that.weekOfYear);
+            return Objects.equals(studentId, that.studentId)
+                    && Objects.equals(studentName, that.studentName)
+                    && Objects.equals(teacherId, that.teacherId)
+                    && Objects.equals(teacherName, that.teacherName)
+                    && Objects.equals(mondayClassHour, that.mondayClassHour)
+                    && Objects.equals(tuesdayClassHour, that.tuesdayClassHour)
+                    && Objects.equals(wednesdayClassHour, that.wednesdayClassHour)
+                    && Objects.equals(thursdayClassHour, that.thursdayClassHour)
+                    && Objects.equals(fridayClassHour, that.fridayClassHour)
+                    && Objects.equals(courseYear, that.courseYear)
+                    && Objects.equals(weekOfYear, that.weekOfYear);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(studentId, studentName, teacherId, teacherName, mondayClassHour, tuesdayClassHour, wednesdayClassHour, thursdayClassHour, fridayClassHour, courseYear, weekOfYear);
+            return Objects.hash(studentId, studentName, teacherId, teacherName,
+                    mondayClassHour, tuesdayClassHour, wednesdayClassHour, thursdayClassHour, fridayClassHour,
+                    courseYear, weekOfYear);
         }
     }
 
