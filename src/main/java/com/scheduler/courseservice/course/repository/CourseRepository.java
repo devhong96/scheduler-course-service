@@ -11,7 +11,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.Year;
+import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import static com.scheduler.courseservice.course.domain.QCourseSchedule.courseSchedule;
@@ -51,7 +55,7 @@ public class CourseRepository {
             cacheManager = "courseCacheManager",
             condition =
                     "!(#year == T(java.time.LocalDate).now().getYear() && " +
-                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
+                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.WeekFields).of(T(java.util.Locale).getDefault()).weekOfYear()))"
     )
     public List<StudentCourseResponse> getWeeklyCoursesByTeacherId(
             String teacherId, Integer year, Integer weekOfYear
@@ -71,7 +75,7 @@ public class CourseRepository {
             cacheManager = "courseCacheManager",
             condition =
                     "!(#year == T(java.time.LocalDate).now().getYear() && " +
-                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.IsoFields).WEEK_OF_WEEK_BASED_YEAR))"
+                    "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.WeekFields).of(T(java.util.Locale).getDefault()).weekOfYear()))"
     )
     public StudentCourseResponse getWeeklyCoursesByStudentId(
             String studentId, Integer year, Integer weekOfYear
@@ -88,7 +92,17 @@ public class CourseRepository {
     }
 
     public List<StudentCourseResponse> findAllSchedule() {
-        return commonStudentCourse().fetch();
+
+        int currentYear = Year.now().getValue();
+        int currentWeek = LocalDate.now().get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear());
+
+        return commonStudentCourse()
+                .where(
+                        courseSchedule.courseYear.eq(currentYear)
+                                .and(courseSchedule.weekOfYear.eq(currentWeek))
+                                .not()
+                )
+                .fetch();
     }
 
     public JPAQuery<StudentCourseResponse> commonStudentCourse() {

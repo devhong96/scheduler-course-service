@@ -64,16 +64,27 @@ public class RedisCourse {
             redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateTeacherCacheKey(course);
-                    redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
+                    Object existing = redisTemplate.opsForValue().get(cacheKey);
+
+                    if (!course.equals(existing)) { // equals 재정의 필요!
+                        redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
+                    }
                 }
+
                 return null;
             });
 
             redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateStudentCacheKey(course);
-                    redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
+
+                    Object existing = redisTemplate.opsForValue().get(cacheKey);
+
+                    if (!course.equals(existing)) { // equals 재정의 필요!
+                        redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
+                    }
                 }
+
                 return null;
             });
 

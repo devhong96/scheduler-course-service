@@ -22,9 +22,7 @@ import org.springframework.kafka.support.SendResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;

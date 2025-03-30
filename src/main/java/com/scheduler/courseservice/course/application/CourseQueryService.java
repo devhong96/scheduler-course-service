@@ -2,7 +2,8 @@ package com.scheduler.courseservice.course.application;
 
 import org.springframework.data.domain.Page;
 
-import static com.scheduler.courseservice.course.dto.CourseInfoResponse.*;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
+import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 
 public interface CourseQueryService {
 

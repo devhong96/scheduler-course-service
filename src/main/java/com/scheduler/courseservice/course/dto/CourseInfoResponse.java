@@ -2,17 +2,15 @@ package com.scheduler.courseservice.course.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CourseInfoResponse {
 
     @Getter
     @Setter
+    @ToString
     public static class StudentCourseResponse {
 
         private String studentId = "";
@@ -41,6 +39,18 @@ public class CourseInfoResponse {
             this.wednesdayClassHour = wednesdayClassHour;
             this.thursdayClassHour = thursdayClassHour;
             this.fridayClassHour = fridayClassHour;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            StudentCourseResponse that = (StudentCourseResponse) o;
+            return Objects.equals(studentId, that.studentId) && Objects.equals(studentName, that.studentName) && Objects.equals(teacherId, that.teacherId) && Objects.equals(teacherName, that.teacherName) && Objects.equals(mondayClassHour, that.mondayClassHour) && Objects.equals(tuesdayClassHour, that.tuesdayClassHour) && Objects.equals(wednesdayClassHour, that.wednesdayClassHour) && Objects.equals(thursdayClassHour, that.thursdayClassHour) && Objects.equals(fridayClassHour, that.fridayClassHour) && Objects.equals(courseYear, that.courseYear) && Objects.equals(weekOfYear, that.weekOfYear);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(studentId, studentName, teacherId, teacherName, mondayClassHour, tuesdayClassHour, wednesdayClassHour, thursdayClassHour, fridayClassHour, courseYear, weekOfYear);
         }
     }
 
