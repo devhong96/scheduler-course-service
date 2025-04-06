@@ -17,7 +17,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 )
 public interface MemberServiceClient {
 
-
     @Operation(
             summary = "교사 정보 조회",
             description = "토큰을 이용하여 정보 조회"

@@ -122,7 +122,6 @@ public class CourseServiceImpl implements CourseService {
                         // 기존 데이터 업데이트
                         CourseSchedule courseSchedule = existingSchedule.get();
                         courseSchedule.updateSchedule(courseScheduleMessage);
-                        courseJpaRepository.save(courseSchedule);
                         redisScheduleList.removeIf(s -> s.getStudentId().equals(courseScheduleMessage.getStudentId()));
                         redisScheduleList.add(courseSchedule);
                     } else {
