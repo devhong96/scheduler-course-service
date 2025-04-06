@@ -102,8 +102,7 @@ class CourseServiceTest {
     void applyCourse() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
 
         StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
-        when(memberServiceClient.findStudentInfoByToken(token))
-                .thenReturn(studentInfo);
+        when(memberServiceClient.findStudentInfoByToken(token)).thenReturn(studentInfo);
 
         UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
         upsertCourseRequest.setMondayClassHour(1);

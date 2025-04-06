@@ -79,7 +79,6 @@ class CourseQueryServiceTest {
         when(memberServiceClient.findTeacherInfoByToken(token))
                 .thenReturn(teacherInfo);
 
-
         CourseList teachersClasses = courseQueryService
                 .findTeachersClasses(token, mockYear, mockWeek);
 
