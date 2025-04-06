@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.course.application;
+package com.scheduler.courseservice.course.service;
 
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.component.DateProvider;

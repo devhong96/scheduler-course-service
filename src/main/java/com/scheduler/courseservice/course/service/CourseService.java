@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.course.application;
+package com.scheduler.courseservice.course.service;
 
 import java.util.List;
 

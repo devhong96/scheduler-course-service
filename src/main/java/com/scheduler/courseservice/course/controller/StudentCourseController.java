@@ -1,7 +1,7 @@
 package com.scheduler.courseservice.course.controller;
 
-import com.scheduler.courseservice.course.application.CourseQueryService;
-import com.scheduler.courseservice.course.application.CourseService;
+import com.scheduler.courseservice.course.service.CourseQueryService;
+import com.scheduler.courseservice.course.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

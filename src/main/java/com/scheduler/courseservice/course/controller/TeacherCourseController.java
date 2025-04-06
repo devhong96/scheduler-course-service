@@ -1,6 +1,6 @@
 package com.scheduler.courseservice.course.controller;
 
-import com.scheduler.courseservice.course.application.CourseQueryService;
+import com.scheduler.courseservice.course.service.CourseQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.course.application;
+package com.scheduler.courseservice.course.service;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.scheduler.courseservice.client.MemberServiceClient;
@@ -67,10 +67,6 @@ class CourseQueryServiceTest {
                         3, 2, 1, 4, 2,
                         mockYear, mockWeek
                 );
-    }
-
-
-    void findAllStudentsCourses() {
     }
 
     @Test

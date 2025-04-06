@@ -1,7 +1,7 @@
 package com.scheduler.courseservice.course.messaging;
 
 import com.rabbitmq.client.Channel;
-import com.scheduler.courseservice.course.application.CourseService;
+import com.scheduler.courseservice.course.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.Header;
