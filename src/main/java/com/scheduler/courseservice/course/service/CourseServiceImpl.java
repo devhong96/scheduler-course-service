@@ -6,6 +6,7 @@ import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
+import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,7 +138,7 @@ public class CourseServiceImpl implements CourseService {
 
             } catch (Exception e) {
                 log.error("Error processing message: {}", message, e);
-                throw new RuntimeException(e);
+                throw new DuplicateCourseException(e);
             }
         }
 
@@ -161,7 +162,7 @@ public class CourseServiceImpl implements CourseService {
                     Objects.equals(newSchedule.getThursdayClassHour(), existing.getThursdayClassHour()) ||
                     Objects.equals(newSchedule.getFridayClassHour(), existing.getFridayClassHour())) {
 
-                throw new RuntimeException(
+                throw new DuplicateCourseException(
                         String.format("Schedule conflict detected for teacher %s with existing student %s on same time slot",
                                 newSchedule.getTeacherName(), existing.getStudentName())
                 );

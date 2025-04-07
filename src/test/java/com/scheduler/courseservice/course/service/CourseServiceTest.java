@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
+import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import com.scheduler.courseservice.testSet.messaging.ChangeStudentNameRequest;
 import org.assertj.core.api.Assertions;
@@ -19,10 +20,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
@@ -208,6 +206,7 @@ class CourseServiceTest {
 
         // 두 스레드 모두 동일한 시간대를 사용하도록 UpsertCourseRequest 생성
         UpsertCourseRequest request = new UpsertCourseRequest();
+
         // 모든 요일에 같은 클래스 시간으로 설정 (충돌이 일어나도록)
         request.setMondayClassHour(1);
         request.setTuesdayClassHour(1);
@@ -224,8 +223,10 @@ class CourseServiceTest {
         Runnable task1 = () -> {
             try {
                 startLatch.await();
+
                 // token_student_1으로 수업 신청
                 courseService.applyCourse("token_student_1", request);
+
                 // 실제 Kafka 전송 대신, 메시지 생성 후 리스트에 추가
                 StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken("token_student_1");
 
@@ -265,12 +266,12 @@ class CourseServiceTest {
         finishLatch.await();
         executor.shutdown();
 
-        // Kafka 메시지 소비 시나리오를 모의하여, 저장 로직을 실행합니다.
+        // Kafka 메시지 소비 시나리오를 통해 저장 로직을 실행합니다.
         // 두 메시지 중 하나가 먼저 등록되어, 두 번째 메시지에서 충돌이 발생해야 합니다.
         try {
             courseService.saveCourseTable(kafkaMessages);
-            fail("충돌로 인해 RuntimeException 이 발생해야 합니다.");
-        } catch (RuntimeException e) {
+            fail("DuplicateCourseException 이 발생해야 합니다.");
+        } catch (DuplicateCourseException e) {
             assertTrue("예외 메시지에 'Schedule conflict detected'가 포함되어야 합니다.",
                     e.getMessage().contains("Schedule conflict detected"));
         }
