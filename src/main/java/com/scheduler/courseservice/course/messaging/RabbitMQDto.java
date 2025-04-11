@@ -1,23 +1,24 @@
 package com.scheduler.courseservice.course.messaging;
 
-import jakarta.validation.constraints.NotEmpty;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 public class RabbitMQDto {
 
     @Getter
     @Setter
-    public static class ChangeStudentName {
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ChangeMemberNameDto {
 
-        private String studentId;
+        private String memberId;
 
-        @NotEmpty
-        private String studentName;
+        private String oldName;
 
-        public ChangeStudentName(String studentId, String studentName) {
-            this.studentId = studentId;
-            this.studentName = studentName;
-        }
+        private String newName;
+
+        private Boolean processed;
+
     }
 }

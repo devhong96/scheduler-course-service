@@ -152,7 +152,6 @@ class CourseServiceTest {
 
         courseService.saveCourseTable(objects);
 
-
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
                         "student_009", mockYear, mockWeek)
@@ -178,8 +177,8 @@ class CourseServiceTest {
     void changeStudentName() throws InterruptedException {
 
         ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();
-        changeStudentNameRequest.setStudentId("student_001");
-        changeStudentNameRequest.setStudentName("Click Kim");
+        changeStudentNameRequest.setMemberId("student_001");
+        changeStudentNameRequest.setNewName("Click Kim");
 
         rabbitTemplate.convertAndSend("student.exchange", "student.name.update", changeStudentNameRequest);
 

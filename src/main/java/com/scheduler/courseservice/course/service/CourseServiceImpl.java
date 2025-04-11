@@ -24,7 +24,7 @@ import java.util.*;
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
-import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeStudentName;
+import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeMemberNameDto;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -172,15 +172,14 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
-    public void changeStudentName(ChangeStudentName changeStudentName) {
+    public void changeStudentName(ChangeMemberNameDto changeMemberNameDto) {
 
-        String studentId = changeStudentName.getStudentId();
+        String studentId = changeMemberNameDto.getMemberId();
 
-        CourseSchedule courseSchedule = courseJpaRepository
-                .findCourseScheduleByStudentId(studentId)
+        CourseSchedule courseSchedule = courseJpaRepository.findCourseScheduleByStudentId(studentId)
                 .orElseThrow(NoSuchElementException::new);
 
-        courseSchedule.updateStudentName(changeStudentName.getStudentName());
+        courseSchedule.updateStudentName(changeMemberNameDto.getNewName());
     }
 
 }

@@ -11,7 +11,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ChangeStudentNameRequest {
 
-    private String studentId;
-    private String studentName;
+    private String memberId;
+
+    private String oldName;
+
+    private String newName;
 
 }
