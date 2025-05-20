@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
@@ -43,6 +44,7 @@ public class KafkaConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
 
         // 컨슈머가 오류로 인해 중단될 경우, 자동으로 다시 시작하도록 설정
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(5000L, 3)); // 5초 간격으로 최대 3번 재시도

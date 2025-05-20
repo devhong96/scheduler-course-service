@@ -3,13 +3,11 @@ package com.scheduler.courseservice.client.request.dto;
 import com.scheduler.courseservice.client.RoleType;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 public class FeignMemberInfo {
 
     @Getter
     @Setter
-    @ToString
     public static class StudentInfo {
 
         private String teacherId;
