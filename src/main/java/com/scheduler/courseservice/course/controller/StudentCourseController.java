@@ -26,7 +26,7 @@ public class StudentCourseController {
             description = "조회자의 금주 수업 조회"
     )
     @GetMapping("class")
-    public ResponseEntity<StudentCourseResponse> findClass(
+    public ResponseEntity<StudentCourseResponse> findStudentClasses(
             @RequestHeader(AUTHORIZATION) String token,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer weekOfYear

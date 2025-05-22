@@ -25,7 +25,7 @@ public class AdminCourseController {
             description = "관리자의 학생 전체 수업 조회. keyword -> 학생, 교사의 고유값 이름"
     )
     @GetMapping("class")
-    public ResponseEntity<Page<StudentCourseResponse>> managePage(
+    public ResponseEntity<Page<StudentCourseResponse>> findAllStudentsCourses(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
