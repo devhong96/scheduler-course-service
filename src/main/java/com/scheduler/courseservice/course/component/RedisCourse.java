@@ -22,7 +22,7 @@ import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentC
 @RequiredArgsConstructor
 public class RedisCourse {
 
-    @Value("${spring.data.redis.redis-preload-enabled:true}") // 기본값 true
+    @Value("${spring.data.redis.redis-preload-enabled}")
     private boolean redisPreloadEnabled;
 
     private final CourseRepository courseRepository;
