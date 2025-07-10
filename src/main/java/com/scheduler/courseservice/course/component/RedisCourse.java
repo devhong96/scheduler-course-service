@@ -7,8 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +35,7 @@ public class RedisCourse {
     private static final String STUDENT_CACHE_NAME = "studentCourses";
 
     private static final long CACHE_TTL = 7;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, ?> redisTemplate;
 
     @PostConstruct
     @Scheduled(cron = "30 59 23 * * SUN", zone = "Asia/Seoul")
@@ -56,35 +59,46 @@ public class RedisCourse {
             redisTemplate.delete(redisTemplate.keys(STUDENT_CACHE_NAME + "*"));
 
             List<StudentCourseResponse> allCourses = courseRepository.findAllSchedule();
+
             if (allCourses.isEmpty()) {
                 log.info("⚠ 데이터 없음. 캐싱하지 않음.");
                 return;
             }
 
+            RedisSerializer<String> keySerializer = redisTemplate.getStringSerializer();
+            RedisSerializer<Object> valueSerializer = (RedisSerializer<Object>) redisTemplate.getValueSerializer();
+
+            // Teacher 캐시 파이프라인
             redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateTeacherCacheKey(course);
-                    Object existing = redisTemplate.opsForValue().get(cacheKey);
 
-                    if (!course.equals(existing)) { // equals 재정의 필요!
-                        redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
-                    }
+                    byte[] rawKey = keySerializer.serialize(cacheKey);
+                    byte[] rawValue = valueSerializer.serialize(course);
+
+                    connection.stringCommands().set(
+                            rawKey,
+                            rawValue,
+                            Expiration.from(CACHE_TTL, TimeUnit.DAYS),
+                            RedisStringCommands.SetOption.UPSERT
+                    );
                 }
-
                 return null;
             });
 
+            // Student 캐시 파이프라인
             redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateStudentCacheKey(course);
-
-                    Object existing = redisTemplate.opsForValue().get(cacheKey);
-
-                    if (!course.equals(existing)) { // equals 재정의 필요!
-                        redisTemplate.opsForValue().set(cacheKey, course, CACHE_TTL, TimeUnit.DAYS);
-                    }
+                    byte[] rawKey = keySerializer.serialize(cacheKey);
+                    byte[] rawValue = valueSerializer.serialize(course);
+                    connection.stringCommands().set(
+                            rawKey,
+                            rawValue,
+                            Expiration.from(CACHE_TTL, TimeUnit.DAYS),
+                            RedisStringCommands.SetOption.UPSERT
+                    );
                 }
-
                 return null;
             });
 

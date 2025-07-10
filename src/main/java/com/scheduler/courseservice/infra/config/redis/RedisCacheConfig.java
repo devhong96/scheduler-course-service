@@ -30,7 +30,7 @@ public class RedisCacheConfig {
                 .cacheDefaults(defaultConfig)
                 .withCacheConfiguration("allStudentCourses",
                         RedisCacheConfiguration.defaultCacheConfig()
-                                .entryTtl(Duration.ofSeconds(30L))
+                                .entryTtl(Duration.ofDays(7L))
                                 .serializeValuesWith(fromSerializer(new GenericJackson2JsonRedisSerializer())))
                 .withCacheConfiguration("teacherCourses",
                         RedisCacheConfiguration.defaultCacheConfig()

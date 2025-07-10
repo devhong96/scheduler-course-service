@@ -7,6 +7,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.scheduler.courseservice.course.component.DateProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import static com.scheduler.courseservice.course.domain.QCourseSchedule.courseSc
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 import static org.springframework.data.support.PageableExecutionUtils.getPage;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class CourseRepository {
@@ -95,11 +97,6 @@ public class CourseRepository {
         int currentWeek = dateProvider.getCurrentWeek();
 
         return commonStudentCourse()
-                .where(
-                        courseSchedule.courseYear.eq(currentYear)
-                                .and(courseSchedule.weekOfYear.eq(currentWeek))
-                                .not()
-                )
                 .fetch();
     }
 
