@@ -69,7 +69,7 @@ public class RedisCourse {
             RedisSerializer<Object> valueSerializer = (RedisSerializer<Object>) redisTemplate.getValueSerializer();
 
             // Teacher 캐시 파이프라인
-            redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            List<Object> objects = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateTeacherCacheKey(course);
 
@@ -86,8 +86,10 @@ public class RedisCourse {
                 return null;
             });
 
+            log.info("teacher data size = {}", objects.size());
+
             // Student 캐시 파이프라인
-            redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            List<Object> objects1 = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
                 for (StudentCourseResponse course : allCourses) {
                     String cacheKey = generateStudentCacheKey(course);
                     byte[] rawKey = keySerializer.serialize(cacheKey);
@@ -101,6 +103,8 @@ public class RedisCourse {
                 }
                 return null;
             });
+
+            log.info("student data size = {}", objects1.size());
 
         } finally {
             lock.unlock(); // 락 해제
