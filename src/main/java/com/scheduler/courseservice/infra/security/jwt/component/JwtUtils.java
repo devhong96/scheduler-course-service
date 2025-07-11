@@ -27,7 +27,7 @@ import static io.jsonwebtoken.io.Decoders.BASE64;
 @RequiredArgsConstructor
 public class JwtUtils {
 
-    @Value("${jwt.secret_key}")
+    @Value("${jwt.secret-key}")
     private String secretKey;
 
     private static SecretKey signingKey;
