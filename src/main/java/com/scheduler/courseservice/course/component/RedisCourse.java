@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 
@@ -68,29 +69,15 @@ public class RedisCourse {
             RedisSerializer<String> keySerializer = redisTemplate.getStringSerializer();
             RedisSerializer<Object> valueSerializer = (RedisSerializer<Object>) redisTemplate.getValueSerializer();
 
-            // Teacher 캐시 파이프라인
-            List<Object> objects = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-                for (StudentCourseResponse course : allCourses) {
-                    String cacheKey = generateTeacherCacheKey(course);
+            List<StudentCourseResponse> distinctCourses = allCourses.stream()
+                    .distinct()
+                    .toList();
 
-                    byte[] rawKey = keySerializer.serialize(cacheKey);
-                    byte[] rawValue = valueSerializer.serialize(course);
-
-                    connection.stringCommands().set(
-                            rawKey,
-                            rawValue,
-                            Expiration.from(CACHE_TTL, TimeUnit.DAYS),
-                            RedisStringCommands.SetOption.UPSERT
-                    );
-                }
-                return null;
-            });
-
-            log.info("teacher data size = {}", objects.size());
+            log.info("student distinct data size = {}", distinctCourses.size());
 
             // Student 캐시 파이프라인
-            List<Object> objects1 = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-                for (StudentCourseResponse course : allCourses) {
+            redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+                for (StudentCourseResponse course : distinctCourses) {
                     String cacheKey = generateStudentCacheKey(course);
                     byte[] rawKey = keySerializer.serialize(cacheKey);
                     byte[] rawValue = valueSerializer.serialize(course);
@@ -104,17 +91,11 @@ public class RedisCourse {
                 return null;
             });
 
-            log.info("student data size = {}", objects1.size());
+            log.info("student data size = {}", allCourses.size());
 
         } finally {
             lock.unlock(); // 락 해제
         }
-    }
-
-    private String generateTeacherCacheKey(StudentCourseResponse course) {
-        return TEACHER_CACHE_NAME + ":teacherId:" + course.getTeacherId()
-                + ":year:" + course.getCourseYear()
-                + ":weekOfYear:" + course.getWeekOfYear();
     }
 
     private String generateStudentCacheKey(StudentCourseResponse course) {
