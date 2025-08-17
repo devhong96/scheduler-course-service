@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class DateProvider {
 
-    private final RedissonClient redissonClient;
+//    private final RedissonClient redissonClient;
 
     private int currentYear;
     private int currentWeek;

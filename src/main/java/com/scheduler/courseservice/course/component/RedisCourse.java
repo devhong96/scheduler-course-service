@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;
 

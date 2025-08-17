@@ -1,21 +1,20 @@
 package com.scheduler.courseservice.course.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.component.DateProvider;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
+import com.scheduler.courseservice.outbox.service.CourseCreatedEventPayload;
+import com.scheduler.courseservice.outbox.service.OutBoxEventPublisher;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +24,7 @@ import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.Stu
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseRequestMessage;
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.course.messaging.RabbitMQDto.ChangeMemberNameDto;
+import static com.scheduler.courseservice.outbox.domain.EventType.CREATED;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
@@ -34,13 +34,10 @@ public class CourseServiceImpl implements CourseService {
 
     private final DateProvider dateProvider;
 
-    @Value("${spring.kafka.topics.course.apply}")
-    private String courseApplyTopic;
-
-    private final MemberServiceClient memberServiceClient;
     private final RedissonClient redissonClient;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final MemberServiceClient memberServiceClient;
     private final CourseJpaRepository courseJpaRepository;
+    private final OutBoxEventPublisher outBoxEventPublisher;
 
     private final ObjectMapper objectMapper;
 
@@ -51,15 +48,9 @@ public class CourseServiceImpl implements CourseService {
 
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
 
-        try {
-            String value = objectMapper.writeValueAsString(
-                    new CourseRequestMessage(studentInfo, upsertCourseRequest));
-
-            kafkaTemplate.send(courseApplyTopic, value);
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        outBoxEventPublisher.publish(
+                CREATED, new CourseCreatedEventPayload(studentInfo, upsertCourseRequest)
+        );
     }
 
     protected void fallbackSaveClassTable(

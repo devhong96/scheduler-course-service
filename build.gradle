@@ -91,7 +91,6 @@ dependencies {
 
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'io.github.embeddedkafka:embedded-kafka_3:3.9.0'
-    testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     testImplementation 'com.h2database:h2'
     testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.2.0'

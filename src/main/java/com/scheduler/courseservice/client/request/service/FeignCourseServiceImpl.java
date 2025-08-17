@@ -31,6 +31,7 @@ public class FeignCourseServiceImpl implements FeignCourseService {
 
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();
+
         String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
         RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
 

@@ -8,9 +8,12 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
 
@@ -51,6 +54,20 @@ public class KafkaConfig {
         factory.setCommonErrorHandler(errorHandler);
         factory.setBatchListener(true);
         return factory;
+    }
+
+    @Bean
+    public Executor messageRelayPublishEventExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(20);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(100);
+        return executor;
+    }
+
+    @Bean
+    public Executor messageRelayPublishPendingEventExecutor() {
+        return Executors.newSingleThreadScheduledExecutor();
     }
 
 }
