@@ -1,9 +1,6 @@
 package com.scheduler.courseservice.outbox.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
@@ -25,6 +22,7 @@ public class OutBox extends BaseEntity {
     @Enumerated(STRING)
     private EventType eventType;
 
+    @Lob
     private String payload;
 
     public static OutBox create(EventType eventType, String payload) {
