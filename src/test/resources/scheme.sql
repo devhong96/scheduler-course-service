@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS course_schedule
 CREATE TABLE IF NOT EXISTS out_box
 (
     id BIGINT NOT NULL AUTO_INCREMENT,
+    idempotency VARCHAR(255),
     event_type VARCHAR(255),
     payload TEXT,
     PRIMARY KEY (id),

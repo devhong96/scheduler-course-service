@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -41,10 +44,15 @@ public class MessageRelay {
 
     private void publishEvent(OutBox outbox) {
         try {
-            kafkaTemplate.send(
-                    courseApplyTopic,
-                    outbox.getPayload()
-            ).get(1, TimeUnit.SECONDS);
+
+            Message<String> message = MessageBuilder.withPayload(outbox.getPayload())
+                    .setHeader(KafkaHeaders.TOPIC, courseApplyTopic)
+                    .setHeader("Idempotency-Key", outbox.getIdempotency())
+                    .setHeader("Event-Type", outbox.getEventType().name())
+                    .build();
+
+            kafkaTemplate.send(message).get(1, TimeUnit.SECONDS);
+
             outBoxJpaRepository.delete(outbox);
         } catch (Exception e) {
             log.error("[MessageRelay.publishEvent] outbox={}", outbox, e);
@@ -52,10 +60,8 @@ public class MessageRelay {
     }
 
     @Scheduled(
-            fixedDelay = 10,
-            initialDelay = 5,
-            timeUnit = TimeUnit.SECONDS,
-            scheduler = "messageRelayPublishPendingEventExecutor"
+            fixedDelay = 10, initialDelay = 5,
+            timeUnit = TimeUnit.SECONDS, scheduler = "messageRelayPublishPendingEventExecutor"
     )
     public void publishPendingEvent() {
 

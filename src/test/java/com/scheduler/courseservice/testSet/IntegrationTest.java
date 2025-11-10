@@ -23,10 +23,9 @@ import java.lang.annotation.Target;
 @Transactional
 @AutoConfigureMockMvc
 @EmbeddedKafka(
-        partitions = 1,
         brokerProperties = {
-                "listeners=PLAINTEXT://localhost:9092",
-                "port=9092"
+                "listeners=PLAINTEXT://127.0.0.1:0",
+                "advertised.listeners=PLAINTEXT://127.0.0.1:0"
         },
         topics = { "course_schedule_logs" }
 )

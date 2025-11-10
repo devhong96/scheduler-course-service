@@ -6,24 +6,34 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
-import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
+import com.scheduler.courseservice.outbox.domain.EventType;
+import com.scheduler.courseservice.outbox.service.CourseCreatedEventPayload;
+import com.scheduler.courseservice.outbox.service.EventPayload;
+import com.scheduler.courseservice.outbox.service.IdempotencyService;
+import com.scheduler.courseservice.outbox.service.OutBoxEventPublisher;
 import com.scheduler.courseservice.testSet.IntegrationTest;
 import com.scheduler.courseservice.testSet.messaging.ChangeStudentNameRequest;
-import org.assertj.core.api.Assertions;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
@@ -31,10 +41,9 @@ import static com.scheduler.courseservice.course.dto.CourseInfoRequest.CourseReq
 import static com.scheduler.courseservice.course.dto.CourseInfoRequest.UpsertCourseRequest;
 import static com.scheduler.courseservice.testSet.messaging.testDataSet.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.util.AssertionErrors.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @IntegrationTest
 class CourseServiceTest {
@@ -49,10 +58,20 @@ class CourseServiceTest {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
+    private CourseJpaRepository courseJpaRepository;
+
+    @MockitoBean
+    private IdempotencyService idempotencyService;
+
+    @MockitoBean
+    private OutBoxEventPublisher outBoxEventPublisher;
+
+    @MockitoBean
+    @Qualifier("testKafkaTemplate")
     private KafkaTemplate<String, String> kafkaTemplate;
 
-    @Autowired
-    private CourseJpaRepository courseJpaRepository;
+    @MockitoSpyBean(name = "testKafkaListenerContainerFactory")
+    private ConcurrentKafkaListenerContainerFactory<String,String> factory;
 
     @MockitoBean
     private MemberServiceClient memberServiceClient;
@@ -100,7 +119,7 @@ class CourseServiceTest {
 
     @Test
     @DisplayName("수업 전달")
-    void applyCourse() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
+    void applyCourse() {
 
         StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
         when(memberServiceClient.findStudentInfoByToken(token)).thenReturn(studentInfo);
@@ -114,18 +133,28 @@ class CourseServiceTest {
 
         courseService.applyCourse(token, upsertCourseRequest);
 
-        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(
-                "topic_course_schedule_logs",
-                objectMapper.writeValueAsString(new CourseRequestMessage(
-                        studentInfo,
-                        upsertCourseRequest
-                ))
+        // Assert (검증)
+        // 1. ArgumentCaptor를 사용하여 publish 메서드에 전달된 인자 캡처
+        ArgumentCaptor<EventPayload> payloadCaptor = ArgumentCaptor.forClass(EventPayload.class);
+
+        // 2. outBoxEventPublisher.publish가 1번 호출되었는지,
+        //    첫 번째 인자가 EventType.CREATED인지,
+        //    두 번째 인자(EventPayload)를 캡처
+        verify(outBoxEventPublisher, times(1)).publish(
+                eq(EventType.CREATED),
+                payloadCaptor.capture()
         );
 
-        SendResult<String, String> sendResult = future.get(5, SECONDS);
+        // 3. 캡처된 페이로드 검증
+        EventPayload capturedPayload = payloadCaptor.getValue();
 
-        assertThat(sendResult).isNotNull();
-        assertThat(sendResult.getProducerRecord().value()).isNotNull();
+        // 3-1. 페이로드가 올바른 타입인지 확인
+        assertThat(capturedPayload).isInstanceOf(CourseCreatedEventPayload.class);
+
+        // 3-2. 페이로드 내부의 데이터가 예상과 일치하는지 확인
+        CourseCreatedEventPayload coursePayload = (CourseCreatedEventPayload) capturedPayload;
+        assertThat(coursePayload.getTeacherId()).isEqualTo(studentInfo.getTeacherId());
+        assertThat(coursePayload.getMondayClassHour()).isEqualTo(upsertCourseRequest.getMondayClassHour());
 
     }
 
@@ -145,15 +174,14 @@ class CourseServiceTest {
         upsertCourseRequest.setThursdayClassHour(0);
         upsertCourseRequest.setFridayClassHour(0);
 
-        CourseRequestMessage courseRequestMessage = new CourseRequestMessage(studentInfo, upsertCourseRequest);
+        CourseRequestMessage message = new CourseRequestMessage(studentInfo, upsertCourseRequest);
+        String json = objectMapper.writeValueAsString(message);
 
-        String string = objectMapper.writeValueAsString(courseRequestMessage);
+        String idem = UUID.randomUUID().toString();
 
-        List<String> objects = new ArrayList<>();
+        when(idempotencyService.claim(idem)).thenReturn(true);
 
-        objects.add(string);
-
-        courseService.saveCourseTable(objects);
+        courseService.saveCourseTable(List.of(idem), List.of(json));
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(
@@ -191,91 +219,100 @@ class CourseServiceTest {
                 .findCourseScheduleByStudentId("student_001")
                 .orElseThrow(NoSuchElementException::new);
 
-        Assertions.assertThat(student010)
+        assertThat(student010)
                 .extracting("studentName", "studentId")
                 .containsExactly("Click Kim", "student_001");
     }
 
     @Test
-    @DisplayName("race condition test")
-    public void testConcurrentCourseApplicationRaceCondition() throws InterruptedException {
+    @DisplayName("통합 동시성 테스트")
+    void saveCourseTable_race_condition() {
+        UpsertCourseRequest req = new UpsertCourseRequest();
+        req.setMondayClassHour(1);
+        req.setTuesdayClassHour(1);
+        req.setWednesdayClassHour(1);
+        req.setThursdayClassHour(1);
+        req.setFridayClassHour(1);
 
-        int threadCount = 2;
+        // 서로 다른 키로 가도록 토큰/키 매핑을 서비스가 지원해야 함(테스트 더블/설정으로)
+        Runnable t1 = () -> courseService.applyCourse("token_student_1", req);
+        Runnable t2 = () -> courseService.applyCourse("token_student_2", req);
 
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch finishLatch = new CountDownLatch(threadCount);
+        ExecutorService exec = Executors.newFixedThreadPool(2);
+        try {
+            exec.submit(t1); exec.submit(t2);
+        } finally { exec.shutdown(); }
 
-        // 두 스레드 모두 동일한 시간대를 사용하도록 UpsertCourseRequest 생성
+        int year = LocalDate.now().getYear();
+        int week = LocalDate.now().get(WeekFields.ISO.weekOfYear());
+
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            List<CourseSchedule> all = courseJpaRepository.findAllByCourseYearAndWeekOfYear(year, week);
+            assertThat(all).hasSize(1);
+        });
+    }
+
+    @Test
+    @DisplayName("consumer concurrency: 같은 선생님/같은 시간대 동시 신청 시 한 건만 저장")
+    void raceCondition() throws Exception {
+        // given: 같은 시간대
+        UpsertCourseRequest req = new UpsertCourseRequest();
+        req.setMondayClassHour(1);
+        req.setTuesdayClassHour(1);
+        req.setWednesdayClassHour(1);
+        req.setThursdayClassHour(1);
+        req.setFridayClassHour(1);
+
+        // 같은 선생님, 다른 학생
+        CourseRequestMessage m1 = new CourseRequestMessage(
+                new StudentInfo("teacher_001", "Mr. Kim", "student1", "student1"), req);
+        CourseRequestMessage m2 = new CourseRequestMessage(
+                new StudentInfo("teacher_001", "Mr. Kim", "student2", "student2"), req);
+
+        String json1 = objectMapper.writeValueAsString(m1);
+        String json2 = objectMapper.writeValueAsString(m2);
+
+        // when: 서로 다른 파티션(0, 1)에 동시에 전송 → 컨슈머 스레드 2개가 병렬 처리
+        kafkaTemplate.send("course_schedule_logs", 0, UUID.randomUUID().toString(), json1);
+        kafkaTemplate.send("course_schedule_logs", 1, UUID.randomUUID().toString(), json2);
+
+        int year = LocalDate.now().getYear();
+        int week = LocalDate.now().get(WeekFields.ISO.weekOfYear());
+
+        await().atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    List<CourseSchedule> all = courseJpaRepository.findAllByCourseYearAndWeekOfYear(year, week);
+                    assertThat(all).hasSize(1);
+                    assertThat(all.get(0).getTeacherId()).isEqualTo("teacher_001");
+                });
+    }
+
+    @Test
+    @DisplayName("같은 멱등 키 테스트. 두 번 → 한 번만 처리")
+    void idempotency_blocks_duplicate() throws Exception {
+
         UpsertCourseRequest request = new UpsertCourseRequest();
 
-        // 모든 요일에 같은 클래스 시간으로 설정 (충돌이 일어나도록)
         request.setMondayClassHour(1);
         request.setTuesdayClassHour(1);
         request.setWednesdayClassHour(1);
         request.setThursdayClassHour(1);
         request.setFridayClassHour(1);
 
-        // applyCourse 호출 시 Kafka로 전송되는 JSON 메시지를 수집할 리스트
-        List<String> kafkaMessages = Collections.synchronizedList(new ArrayList<>());
+        String json = objectMapper.writeValueAsString(new CourseRequestMessage(
+                new StudentInfo("teacher_001","Mr. Kim","student_009","Irene Seo"), request));
 
-        when(memberServiceClient.findStudentInfoByToken("token_student_1"))
-                .thenReturn(new StudentInfo("teacher123", "teacherName", "student1", "student1"));
+        String sameIdem = UUID.randomUUID().toString();
+        when(idempotencyService.claim(sameIdem)).thenReturn(true, false);
 
-        Runnable task1 = () -> {
-            try {
-                startLatch.await();
+        courseService.saveCourseTable(List.of(sameIdem), List.of(json));
+        courseService.saveCourseTable(List.of(sameIdem), List.of(json));
 
-                // token_student_1으로 수업 신청
-                courseService.applyCourse("token_student_1", request);
+        // 기대: 1건만 존재
+        long count = courseJpaRepository
+                .findAllByCourseYearAndWeekOfYear(mockYear, mockWeek)
+                .stream().filter(s -> "teacher_001".equals(s.getTeacherId())).count();
 
-                // 실제 Kafka 전송 대신, 메시지 생성 후 리스트에 추가
-                StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken("token_student_1");
-
-                CourseRequestMessage msg1 = new CourseRequestMessage(studentInfo, request);
-                String json = objectMapper.writeValueAsString(msg1);
-                kafkaMessages.add(json);
-            } catch (Exception e) {
-                throw new NoSuchElementException(e.getMessage());
-            } finally {
-                finishLatch.countDown();
-            }
-        };
-
-        when(memberServiceClient.findStudentInfoByToken("token_student_2"))
-                .thenReturn(new StudentInfo("teacher123", "teacherName", "student2", "student2"));
-
-        Runnable task2 = () -> {
-            try {
-                startLatch.await();
-                courseService.applyCourse("token_student_2", request);
-
-                StudentInfo student2Info = memberServiceClient.findStudentInfoByToken("token_student_2");
-                CourseRequestMessage msg2 = new CourseRequestMessage(student2Info, request);
-                String json = objectMapper.writeValueAsString(msg2);
-                kafkaMessages.add(json);
-            } catch (Exception e) {
-                throw new NoSuchElementException(e.getMessage());
-            } finally {
-                finishLatch.countDown();
-            }
-        };
-
-        // 두 스레드 시작 준비 및 실행
-        executor.submit(task1);
-        executor.submit(task2);
-        startLatch.countDown();
-        finishLatch.await();
-        executor.shutdown();
-
-        // Kafka 메시지 소비 시나리오를 통해 저장 로직을 실행합니다.
-        // 두 메시지 중 하나가 먼저 등록되어, 두 번째 메시지에서 충돌이 발생해야 합니다.
-        try {
-            courseService.saveCourseTable(kafkaMessages);
-            fail("DuplicateCourseException 이 발생해야 합니다.");
-        } catch (DuplicateCourseException e) {
-            assertTrue("예외 메시지에 'Schedule conflict detected'가 포함되어야 합니다.",
-                    e.getMessage().contains("Schedule conflict detected"));
-        }
+        assertThat(count).isEqualTo(1);
     }
 }

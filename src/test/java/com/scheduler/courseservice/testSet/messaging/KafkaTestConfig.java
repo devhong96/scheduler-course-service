@@ -47,6 +47,7 @@ public class KafkaTestConfig {
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(5000L, 3)); // 5초 간격으로 최대 3번 재시도
         factory.setCommonErrorHandler(errorHandler);
         factory.setBatchListener(true);
+        factory.setConcurrency(2);
         return factory;
     }
 

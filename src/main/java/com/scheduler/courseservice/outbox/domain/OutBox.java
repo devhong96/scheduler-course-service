@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.UUID;
+
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -19,6 +21,9 @@ public class OutBox extends BaseEntity {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String idempotency;
+
     @Enumerated(STRING)
     private EventType eventType;
 
@@ -30,5 +35,10 @@ public class OutBox extends BaseEntity {
         outBox.eventType = eventType;
         outBox.payload = payload;
         return outBox;
+    }
+
+    @PrePersist
+    void createKey() {
+        idempotency = UUID.randomUUID().toString();
     }
 }

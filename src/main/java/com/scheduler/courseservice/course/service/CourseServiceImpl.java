@@ -7,6 +7,7 @@ import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
 import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import com.scheduler.courseservice.outbox.service.CourseCreatedEventPayload;
+import com.scheduler.courseservice.outbox.service.IdempotencyService;
 import com.scheduler.courseservice.outbox.service.OutBoxEventPublisher;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class CourseServiceImpl implements CourseService {
     private final MemberServiceClient memberServiceClient;
     private final CourseJpaRepository courseJpaRepository;
     private final OutBoxEventPublisher outBoxEventPublisher;
+    private final IdempotencyService idempotencyService;
 
     private final ObjectMapper objectMapper;
 
@@ -66,9 +69,11 @@ public class CourseServiceImpl implements CourseService {
             containerFactory = "kafkaListenerContainerFactory"
     )
     @Transactional
-    public void saveCourseTable(List<String> messages) {
+    public void saveCourseTable(
+            @Header(name = "Idempotency-Key", required = false) List<String> idemKeys,
+            List<String> messages
+    ) {
         if (messages.isEmpty()) return;
-        List<CourseSchedule> courseScheduleList = new ArrayList<>();
 
         int currentYear = dateProvider.getCurrentYear();
         int currentWeek = dateProvider.getCurrentWeek();
@@ -77,21 +82,22 @@ public class CourseServiceImpl implements CourseService {
         String cacheKey = "courseSchedules:" + currentYear + ":" + currentWeek;
         RBucket<List<CourseSchedule>> bucket = redissonClient.getBucket(cacheKey);
 
-        List<CourseSchedule> redisScheduleList = bucket.get();
+        for (int i = 0; i < messages.size(); i++) {
+            String message = messages.get(i);
+            String idem = (idemKeys != null && idemKeys.size() > i) ? idemKeys.get(i) : null;
 
-        if (redisScheduleList == null) {
-            redisScheduleList = courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek);
-            bucket.set(redisScheduleList);
-        }
-
-        for (String message : messages) {
             try {
+
+                if (idem != null && !idempotencyService.claim(idem)) {
+                    continue; // 이미 처리된 메시지 → 스킵
+                }
+
                 CourseRequestMessage courseScheduleMessage = objectMapper.readValue(message, CourseRequestMessage.class);
 
                 String lockKey = "courseLock:" + courseScheduleMessage.getTeacherId();
                 RLock lock = redissonClient.getLock(lockKey);
 
-                boolean available = lock.tryLock(10, 1, SECONDS);
+                boolean available = lock.tryLock(5, SECONDS);
 
                 if (!available) {
                     log.warn("Skipping processing for studentId {} as it's locked.", courseScheduleMessage.getStudentId());
@@ -99,8 +105,12 @@ public class CourseServiceImpl implements CourseService {
                 }
 
                 try {
+
+                    List<CourseSchedule> scheduleList = Optional.ofNullable(bucket.get())
+                            .orElseGet(() -> courseJpaRepository.findAllByCourseYearAndWeekOfYear(currentYear, currentWeek));
+
                     // 해당 시간대에 다른 학생의 수업이 있는지 확인
-                    checkScheduleConflict(courseScheduleMessage, redisScheduleList);
+                    checkScheduleConflict(courseScheduleMessage, scheduleList);
 
                     // 기존 데이터 조회 (중복 방지)
                     Optional<CourseSchedule> existingSchedule = courseJpaRepository
@@ -114,15 +124,18 @@ public class CourseServiceImpl implements CourseService {
                         // 기존 데이터 업데이트
                         CourseSchedule courseSchedule = existingSchedule.get();
                         courseSchedule.updateSchedule(courseScheduleMessage);
-                        redisScheduleList.removeIf(s -> s.getStudentId().equals(courseScheduleMessage.getStudentId()));
-                        redisScheduleList.add(courseSchedule);
+                        // 레코드 단위 즉시 저장 + 캐시 갱신
+                        courseJpaRepository.save(courseSchedule);
+                        scheduleList.removeIf(s -> s.getStudentId().equals(courseScheduleMessage.getStudentId()));
+                        scheduleList.add(courseSchedule);
                     } else {
                         // 새로운 데이터 추가
                         CourseSchedule courseSchedule = CourseSchedule.create(courseScheduleMessage);
-                        courseScheduleList.add(courseSchedule);
-                        redisScheduleList.add(courseSchedule);
+                        courseJpaRepository.save(courseSchedule);
+                        scheduleList.add(courseSchedule);
                     }
 
+                    bucket.set(new ArrayList<>(scheduleList));
                 } finally {
                     lock.unlock();
                 }
@@ -132,27 +145,19 @@ public class CourseServiceImpl implements CourseService {
                 throw new DuplicateCourseException(e);
             }
         }
-
-        if (!courseScheduleList.isEmpty()) {
-            courseJpaRepository.saveAll(courseScheduleList);
-            bucket.set(redisScheduleList);
-        }
     }
 
     private void checkScheduleConflict(CourseRequestMessage newSchedule, List<CourseSchedule> schedules) {
         for (CourseSchedule existing : schedules) {
-            // 동일 학생의 스케줄은 체크하지 않음
-            if (existing.getStudentId().equals(newSchedule.getStudentId())) {
-                continue;
-            }
+            if (!Objects.equals(existing.getTeacherId(), newSchedule.getTeacherId())) continue; // 같은 선생님만
+            if (Objects.equals(existing.getStudentId(), newSchedule.getStudentId())) continue;  // 동일 학생은 패스
 
             // 요일별 시간 비교 (null 안전 비교)
-            if (Objects.equals(newSchedule.getMondayClassHour(), existing.getMondayClassHour()) ||
-                    Objects.equals(newSchedule.getTuesdayClassHour(), existing.getTuesdayClassHour()) ||
-                    Objects.equals(newSchedule.getWednesdayClassHour(), existing.getWednesdayClassHour()) ||
-                    Objects.equals(newSchedule.getThursdayClassHour(), existing.getThursdayClassHour()) ||
-                    Objects.equals(newSchedule.getFridayClassHour(), existing.getFridayClassHour())) {
-
+            if (Objects.equals(newSchedule.getMondayClassHour(), existing.getMondayClassHour())
+                    || Objects.equals(newSchedule.getTuesdayClassHour(), existing.getTuesdayClassHour())
+                    || Objects.equals(newSchedule.getWednesdayClassHour(), existing.getWednesdayClassHour())
+                    || Objects.equals(newSchedule.getThursdayClassHour(), existing.getThursdayClassHour())
+                    || Objects.equals(newSchedule.getFridayClassHour(), existing.getFridayClassHour())) {
                 throw new DuplicateCourseException(
                         String.format("Schedule conflict detected for teacher %s with existing student %s on same time slot",
                                 newSchedule.getTeacherName(), existing.getStudentName())
@@ -160,6 +165,7 @@ public class CourseServiceImpl implements CourseService {
             }
         }
     }
+
 
     @Override
     @Transactional

@@ -17,7 +17,12 @@ import static lombok.AccessLevel.PROTECTED;
 @Getter
 @DynamicUpdate
 @NoArgsConstructor(access = PROTECTED)
-@Table(indexes = {
+@Table(
+        uniqueConstraints = {
+          @UniqueConstraint(name = "unique_student_year_week",
+            columnNames = {"studentId", "courseYear", "weekOfYear"}
+          )},
+        indexes = {
         @Index(name = "idx_course_year", columnList = "courseYear"),
         @Index(name = "idx_week_of_year", columnList = "weekOfYear"),
         @Index(name = "idx_year_week", columnList = "courseYear, weekOfYear")
@@ -60,10 +65,6 @@ public class CourseSchedule extends BaseEntity {
 
     @Column(nullable = false)
     private Integer courseYear;
-
-    @Version
-    private Long version = 0L;
-
 
     public static CourseSchedule create(CourseRequestMessage request) {
         CourseSchedule courseSchedule = new CourseSchedule();
