@@ -58,7 +58,7 @@ public class CourseServiceImpl implements CourseService {
     protected void fallbackSaveClassTable(
             String token, UpsertCourseRequest upsertCourseRequest, Throwable e
     ) {
-        log.warn("Reason: {}", e.getMessage());
+        log.warn("Reason: ", e);
         throw new RuntimeException("수업 정보를 저장할 수 없습니다. 다시 시도해 주세요.");
     }
 
