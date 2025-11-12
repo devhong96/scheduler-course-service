@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.*;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;

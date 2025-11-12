@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.*;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @FeignClient(

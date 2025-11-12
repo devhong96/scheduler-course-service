@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.StudentInfo;
-import static com.scheduler.courseservice.client.request.dto.FeignMemberInfo.TeacherInfo;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.StudentInfo;
+import static com.scheduler.courseservice.client.dto.FeignMemberInfo.TeacherInfo;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.CourseList.Day.FRIDAY;
 import static com.scheduler.courseservice.course.dto.CourseInfoResponse.StudentCourseResponse;

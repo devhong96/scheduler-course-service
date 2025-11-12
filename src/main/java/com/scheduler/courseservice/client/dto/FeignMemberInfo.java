@@ -1,4 +1,4 @@
-package com.scheduler.courseservice.client.request.dto;
+package com.scheduler.courseservice.client.dto;
 
 import com.scheduler.courseservice.client.RoleType;
 import lombok.Getter;

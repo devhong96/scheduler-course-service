@@ -22,6 +22,11 @@ public class CourseLoggingAspect {
         return getObject(joinPoint);
     }
 
+    @Around("execution(* com.scheduler.courseservice.client.controller.*Controller.*(..))")
+    public Object feignController(ProceedingJoinPoint joinPoint) throws Throwable {
+        return getObject(joinPoint);
+    }
+
     private static Object getObject(ProceedingJoinPoint joinPoint) throws Throwable {
         String location = joinPoint.getSignature().getDeclaringTypeName();
 

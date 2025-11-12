@@ -1,6 +1,6 @@
-package com.scheduler.courseservice.client.request.controller;
+package com.scheduler.courseservice.client.controller;
 
-import com.scheduler.courseservice.client.request.service.FeignCourseService;
+import com.scheduler.courseservice.client.service.FeignCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
