@@ -45,12 +45,11 @@ public class CourseServiceImpl implements CourseService {
     private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional
+    @Transactional("transactionManager")
     @CircuitBreaker(name = "studentService", fallbackMethod = "fallbackSaveClassTable")
     public void applyCourse(String token, UpsertCourseRequest upsertCourseRequest) {
 
         StudentInfo studentInfo = memberServiceClient.findStudentInfoByToken(token);
-
         outBoxEventPublisher.publish(
                 CREATED, new CourseCreatedEventPayload(studentInfo, upsertCourseRequest)
         );

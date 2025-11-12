@@ -12,6 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -25,9 +26,14 @@ public class KafkaConfig {
 
     @Bean
     public ProducerFactory<String, String> producerFactory() {
-        Map<String, Object> stringObjectMap = kafkaProperties.getProducer().buildProperties(null);
-        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
-        return new DefaultKafkaProducerFactory<>(stringObjectMap);
+        Map<String, Object> props = kafkaProperties.getProducer().buildProperties(null);
+        props.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+
+        DefaultKafkaProducerFactory<String, String> factory = new DefaultKafkaProducerFactory<>(props);
+
+        String txIdPrefix = kafkaProperties.getProducer().getTransactionIdPrefix();
+        factory.setTransactionIdPrefix(Objects.requireNonNullElse(txIdPrefix, "tx-course"));
+        return factory;
     }
 
     @Bean
@@ -37,9 +43,9 @@ public class KafkaConfig {
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
-        Map<String, Object> stringObjectMap = kafkaProperties.getConsumer().buildProperties(null);
-        stringObjectMap.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
-        return new DefaultKafkaConsumerFactory<>(stringObjectMap);
+        Map<String, Object> factory = kafkaProperties.getConsumer().buildProperties(null);
+        factory.putIfAbsent(BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        return new DefaultKafkaConsumerFactory<>(factory);
     }
 
 

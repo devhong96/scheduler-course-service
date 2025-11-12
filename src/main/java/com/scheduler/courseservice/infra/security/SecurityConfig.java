@@ -1,6 +1,5 @@
 package com.scheduler.courseservice.infra.security;
 
-import com.scheduler.courseservice.infra.security.jwt.component.JwtUtils;
 import com.scheduler.courseservice.infra.security.jwt.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +20,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtUtils jwtUtils;
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public AuthenticationManager authenticationManagerauthenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -57,7 +56,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterAt(new JwtAuthFilter(jwtUtils), BasicAuthenticationFilter.class)
+                .addFilterAt(jwtAuthFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers(INTERNAL_ENDPOINTS)

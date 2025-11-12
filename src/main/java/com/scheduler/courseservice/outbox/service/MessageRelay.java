@@ -51,7 +51,10 @@ public class MessageRelay {
                     .setHeader("Event-Type", outbox.getEventType().name())
                     .build();
 
-            kafkaTemplate.send(message).get(1, TimeUnit.SECONDS);
+            kafkaTemplate.executeInTransaction(kt -> {
+                kt.send(message);
+                return null;
+            });
 
             outBoxJpaRepository.delete(outbox);
         } catch (Exception e) {
