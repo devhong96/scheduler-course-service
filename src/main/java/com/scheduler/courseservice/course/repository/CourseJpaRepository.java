@@ -14,7 +14,10 @@ public interface CourseJpaRepository extends JpaRepository<CourseSchedule, Long>
 
     Optional<CourseSchedule> findCourseScheduleByStudentId(String studentId);
 
-    Optional<CourseSchedule> findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(String studentId, Integer courseYear, Integer weekOfYear);
+    List<CourseSchedule> findAllCourseScheduleByTeacherIdAndCourseYearAndWeekOfYear(String teacherId, Integer courseYear, Integer weekOfYear);
 
     List<CourseSchedule> findAllByCourseYearAndWeekOfYear(int currentYear, int currentWeek);
+
+    Optional<CourseSchedule> findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(String studentId, Integer courseYear, Integer weekOfYear);
+
 }

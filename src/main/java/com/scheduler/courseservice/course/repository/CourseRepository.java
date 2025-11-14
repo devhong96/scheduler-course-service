@@ -49,6 +49,7 @@ public class CourseRepository {
         return getPage(contents, pageable, totalCount::fetchOne);
     }
 
+    // 현재가 아닌 주차 조회
     @Cacheable(
             cacheNames = "teacherCourses",
             key = "'teacherCourses:teacherId:' + #teacherId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
@@ -69,22 +70,24 @@ public class CourseRepository {
                 .fetch();
     }
 
+    // 현재가 아닌 주차 조회
     @Cacheable(
             cacheNames = "studentCourses",
-            key = "'studentCourses:studentId:' + #studentId + ':year:' + #year + ':weekOfYear:' + #weekOfYear",
+            key = "'studentCourses:studentId:' + #studentId + 'teacherId:' + #teacherId +':year:' + #year + ':weekOfYear:' + #weekOfYear",
             cacheManager = "courseCacheManager",
             condition =
                     "!(#year == T(java.time.LocalDate).now().getYear() && " +
                     "#weekOfYear == T(java.time.LocalDate).now().get(T(java.time.temporal.WeekFields).of(T(java.util.Locale).getDefault()).weekOfYear()))"
     )
     public StudentCourseResponse getWeeklyCoursesByStudentId(
-            String studentId, Integer year, Integer weekOfYear
+            String studentId, String teacherId, Integer year, Integer weekOfYear
     ) {
         StudentCourseResponse result = commonStudentCourse()
                 .where(
                         yearEq(year),
                         weekOfYearEq(weekOfYear),
-                        studentIdEq(studentId)
+                        studentIdEq(studentId),
+                        teacherIdEq(teacherId)
                 )
                 .fetchOne();
 

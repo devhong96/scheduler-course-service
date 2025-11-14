@@ -50,11 +50,12 @@ public class CourseQueryServiceImpl implements CourseQueryService {
         }
 
         String studentId = studentInfo.getStudentId();
+        String teacherId = studentInfo.getTeacherId();
 
         int finalYear = (year != null) ? year : dateProvider.getCurrentYear();
         int finalWeekOfYear = (weekOfYear != null) ? weekOfYear : dateProvider.getCurrentWeek();
 
-        return courseRepository.getWeeklyCoursesByStudentId(studentId, finalYear, finalWeekOfYear);
+        return courseRepository.getWeeklyCoursesByStudentId(studentId, teacherId, finalYear, finalWeekOfYear);
     }
 
     protected StudentCourseResponse fallbackFindStudentClasses(

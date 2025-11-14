@@ -51,10 +51,7 @@ public class MessageRelay {
                     .setHeader("Event-Type", outbox.getEventType().name())
                     .build();
 
-            kafkaTemplate.executeInTransaction(kt -> {
-                kt.send(message);
-                return null;
-            });
+            kafkaTemplate.executeInTransaction(kt -> kt.send(message));
 
             outBoxJpaRepository.delete(outbox);
         } catch (Exception e) {
