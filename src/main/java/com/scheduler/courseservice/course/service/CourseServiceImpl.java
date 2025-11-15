@@ -1,5 +1,6 @@
 package com.scheduler.courseservice.course.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.scheduler.courseservice.client.MemberServiceClient;
 import com.scheduler.courseservice.course.domain.CourseSchedule;
 import com.scheduler.courseservice.course.repository.CourseJpaRepository;
@@ -10,7 +11,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,20 +60,35 @@ public class CourseServiceImpl implements CourseService {
     )
     public void saveCourseTable(
             @Header(name = "Idempotency-Key", required = false) List<String> idemKeys,
-            List<String> messages
+            @Payload List<String> messages,
+            Acknowledgment ack
     ) {
-        if (messages.isEmpty()) return;
+        if (messages.isEmpty()){
+            ack.acknowledge();
+            return;
+        }
 
-        for (int i = 0; i < messages.size(); i++) {
-            String idem = (idemKeys != null && idemKeys.size() > i) ? idemKeys.get(i) : null;
-            String message = messages.get(i);
+        try {
+            for (int i = 0; i < messages.size(); i++) {
+                String idem = (idemKeys != null && idemKeys.size() > i) ? idemKeys.get(i) : null;
+                String message = messages.get(i);
 
-            try {
-                courseMessageService.processMessage(idem, message);
-            } catch (Exception e) {
-                log.error("Error processing message: {}", message, e);
-                throw new DuplicateCourseException(e);
+                try {
+                    courseMessageService.processMessage(idem, message);
+                } catch (DuplicateCourseException e) {
+                    log.warn("중복 메시지 처리 건너뜀 (배치 계속 진행): message = {}, reason = {}", message, e.getMessage());
+                } catch (JsonProcessingException e) {
+                    log.warn("JsonType Error : message = {}, errorMessage = {}", message, e.getMessage());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
+
+            ack.acknowledge();
+
+        } catch (Exception e) {
+            log.error("배치 처리 중 재시도 필요한 오류 발생 :", e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
@@ -148,6 +149,8 @@ class CourseServiceTest {
     @DisplayName("수업 수정")
     void saveCourseTable() throws JsonProcessingException {
 
+        Acknowledgment mockAck = mock(Acknowledgment.class);
+
         StudentInfo studentInfo = new StudentInfo(
                 "teacher_001", "Mr. Kim",
                 "student_009", "Irene Seo"
@@ -167,7 +170,7 @@ class CourseServiceTest {
 
         when(idempotencyService.claim(idem)).thenReturn(true);
 
-        courseService.saveCourseTable(List.of(idem), List.of(json));
+        courseService.saveCourseTable(List.of(idem), List.of(json), mockAck);
 
         CourseSchedule student = courseJpaRepository
                 .findCourseScheduleByStudentIdAndCourseYearAndWeekOfYear(

@@ -1,6 +1,8 @@
 package com.scheduler.courseservice.course.service;
 
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 
 import java.util.List;
 
@@ -15,5 +17,7 @@ public interface CourseService {
 
       void saveCourseTable(
               @Header(name = "Idempotency-Key", required = false) List<String> idemKeys,
-              List<String> messages);
+              @Payload List<String> messages,
+              Acknowledgment ack
+      );
 }

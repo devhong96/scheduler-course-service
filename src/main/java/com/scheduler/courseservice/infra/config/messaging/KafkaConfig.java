@@ -1,5 +1,7 @@
 package com.scheduler.courseservice.infra.config.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.scheduler.courseservice.infra.exception.custom.DuplicateCourseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -57,6 +59,8 @@ public class KafkaConfig {
 
         // 컨슈머가 오류로 인해 중단될 경우, 자동으로 다시 시작하도록 설정
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(5000L, 3)); // 5초 간격으로 최대 3번 재시도
+        errorHandler.addNotRetryableExceptions(JsonProcessingException.class);
+        errorHandler.addNotRetryableExceptions(DuplicateCourseException.class);
         factory.setCommonErrorHandler(errorHandler);
         factory.setBatchListener(true);
         return factory;
