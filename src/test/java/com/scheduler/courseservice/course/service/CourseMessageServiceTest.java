@@ -39,8 +39,8 @@ class CourseMessageServiceTest {
 
         // Given
         StudentInfo studentInfo = new StudentInfo(
-                "teacher_001", "Mr. Kim",
-                "student_009", "Irene Seo"
+                "teacher_001", "Mr.Kim",
+                "student_009", "Irene_Seo"
         );
         UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
         upsertCourseRequest.setMondayClassHour(1);
@@ -66,7 +66,7 @@ class CourseMessageServiceTest {
                         CourseSchedule::getMondayClassHour, CourseSchedule::getTuesdayClassHour
                 )
                 .containsExactly(
-                        "teacher_001", "Irene Seo",
+                        "teacher_001", "Irene_Seo",
                         1, 2
                 );
     }

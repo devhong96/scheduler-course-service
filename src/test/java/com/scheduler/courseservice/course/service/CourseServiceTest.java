@@ -95,9 +95,9 @@ class CourseServiceTest {
 
         StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
 
-        when(memberServiceClient.findStudentInfoByToken(token)).thenReturn(studentInfo);
+        when(memberServiceClient.findStudentInfoByToken(TEST_TOKEN_1)).thenReturn(studentInfo);
 
-        StudentInfo result = memberServiceClient.findStudentInfoByToken(token);
+        StudentInfo result = memberServiceClient.findStudentInfoByToken(TEST_TOKEN_1);
 
         assertThat(result)
                 .isNotNull()
@@ -116,7 +116,7 @@ class CourseServiceTest {
     void applyCourse() {
 
         StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
-        when(memberServiceClient.findStudentInfoByToken(token)).thenReturn(studentInfo);
+        when(memberServiceClient.findStudentInfoByToken(TEST_TOKEN_1)).thenReturn(studentInfo);
 
         UpsertCourseRequest upsertCourseRequest = new UpsertCourseRequest();
         upsertCourseRequest.setMondayClassHour(1);
@@ -125,7 +125,7 @@ class CourseServiceTest {
         upsertCourseRequest.setThursdayClassHour(2);
         upsertCourseRequest.setFridayClassHour(5);
 
-        courseService.applyCourse(token, upsertCourseRequest);
+        courseService.applyCourse(TEST_TOKEN_1, upsertCourseRequest);
 
         ArgumentCaptor<EventPayload> payloadCaptor = ArgumentCaptor.forClass(EventPayload.class);
 
@@ -185,8 +185,8 @@ class CourseServiceTest {
                         CourseSchedule::getCourseYear, CourseSchedule::getWeekOfYear
                 )
                 .containsExactly(
-                        "teacher_001", "Mr. Kim",
-                        "student_009", "Irene Seo",
+                        "teacher_001", "Mr.Kim",
+                        "student_009", "Irene_Seo",
                         1, 2, 0, 0, 0,
                         mockYear, mockWeek
                 );
@@ -198,7 +198,7 @@ class CourseServiceTest {
 
         ChangeStudentNameRequest changeStudentNameRequest = new ChangeStudentNameRequest();
         changeStudentNameRequest.setMemberId("student_001");
-        changeStudentNameRequest.setNewName("Click Kim");
+        changeStudentNameRequest.setNewName("Click_Kim");
 
         rabbitTemplate.convertAndSend("student.exchange", "student.name.update", changeStudentNameRequest);
 
@@ -210,7 +210,7 @@ class CourseServiceTest {
 
         assertThat(student010)
                 .extracting("studentName", "studentId")
-                .containsExactly("Click Kim", "student_001");
+                .containsExactly("Click_Kim", "student_001");
     }
 
 }

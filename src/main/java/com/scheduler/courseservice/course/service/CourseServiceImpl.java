@@ -76,7 +76,7 @@ public class CourseServiceImpl implements CourseService {
                 try {
                     courseMessageService.processMessage(idem, message);
                 } catch (DuplicateCourseException e) {
-                    log.warn("중복 메시지 처리 건너뜀 (배치 계속 진행): message = {}, reason = {}", message, e.getMessage());
+                    log.warn("DuplicateCourse (배치 계속 진행): message = {}, reason = {}", message, e.getMessage());
                 } catch (JsonProcessingException e) {
                     log.warn("JsonType Error : message = {}, errorMessage = {}", message, e.getMessage());
                 } catch (Exception e) {

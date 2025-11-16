@@ -52,10 +52,10 @@ class CourseQueryServiceTest {
 
         StudentInfo studentInfo = new StudentInfo("teacher_001", "Mr. Kim", "student_009", "Irene Seo");
 
-        when(memberServiceClient.findStudentInfoByToken(token))
+        when(memberServiceClient.findStudentInfoByToken(TEST_TOKEN_1))
                 .thenReturn(studentInfo);
 
-        StudentCourseResponse studentClasses = courseQueryService.findStudentClasses(token, mockYear, mockWeek);
+        StudentCourseResponse studentClasses = courseQueryService.findStudentClasses(TEST_TOKEN_1, mockYear, mockWeek);
 
         assertThat(studentClasses)
                 .extracting(
@@ -63,7 +63,7 @@ class CourseQueryServiceTest {
                         "mondayClassHour", "tuesdayClassHour", "wednesdayClassHour", "thursdayClassHour", "fridayClassHour",
                         "courseYear", "weekOfYear")
                 .containsExactly(
-                        "student_009", "Irene Seo",
+                        "student_009", "Irene_Seo",
                         3, 2, 1, 4, 2,
                         mockYear, mockWeek
                 );
@@ -76,11 +76,11 @@ class CourseQueryServiceTest {
         // Given
         TeacherInfo teacherInfo = new TeacherInfo("teacher_001");
 
-        when(memberServiceClient.findTeacherInfoByToken(token))
+        when(memberServiceClient.findTeacherInfoByToken(TEST_TOKEN_1))
                 .thenReturn(teacherInfo);
 
         CourseList teachersClasses = courseQueryService
-                .findTeachersClasses(token, mockYear, mockWeek);
+                .findTeachersClasses(TEST_TOKEN_1, mockYear, mockWeek);
 
         int size = teachersClasses.getClassList(FRIDAY).size();
 
