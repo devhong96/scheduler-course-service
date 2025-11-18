@@ -11,13 +11,16 @@ import static com.scheduler.courseservice.course.dto.FeignMemberRequest.CourseRe
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("feign-course")
+@RequestMapping("feign-member-course")
 @RequiredArgsConstructor
 public class FeignMemberController {
 
     private final FeignCourseService feignCourseService;
 
-    @Operation(summary = "선생님이 담당하는 학생들의 주간 수업 존재 여부 조회")
+    @Operation(
+            summary = "교사 수업 존재 여부 조회",
+            description = "담당하는 학생들의 주간 수업 존재 여부 조회"
+    )
     @GetMapping("teacher/{teacherId}/courses")
     public ResponseEntity<CourseExistenceResponse> existWeeklyCoursesByTeacherId(
             @PathVariable String teacherId
@@ -26,7 +29,10 @@ public class FeignMemberController {
                 .existWeeklyCoursesByTeacherId(teacherId), OK);
     }
 
-    @Operation(summary = "학생과 선생님의 주간 코스 중복 확인 후, 변경")
+    @Operation(
+            summary = "교사 변경",
+            description = "학생과 선생님의 주간 코스 중복 확인 후, 변경"
+    )
     @PatchMapping("teacher/{teacherId}/student/{studentId}")
     public ResponseEntity<CourseReassignmentResponse> validateStudentCoursesAndReassign(
             @PathVariable String teacherId,

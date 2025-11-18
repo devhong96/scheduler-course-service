@@ -39,7 +39,7 @@ class FeignMemberControllerTest {
                 .willReturn(mockResponse);
 
         mockMvc.perform(
-                        get("/feign-course/teacher/{teacherId}/courses", teacherId)
+                        get("/feign-member-course/teacher/{teacherId}/courses", teacherId)
                                 .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("exists").value(true));
@@ -60,7 +60,7 @@ class FeignMemberControllerTest {
 
         mockMvc.perform(
 
-                        patch("/feign-course/teacher/{teacherId}/student/{studentId}", teacherId, studentId)
+                        patch("/feign-member-course/teacher/{teacherId}/student/{studentId}", teacherId, studentId)
                                 .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
